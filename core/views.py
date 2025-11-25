@@ -14,7 +14,6 @@ def catequizando_listar(request):
     with connection.cursor() as cursor:
         cursor.execute("EXEC Participante.sp_ListarCatequizandos")
 
-        # Si NO hay resultados, cursor.description es None
         if cursor.description is None:
             catequizandos = []
         else:
@@ -39,7 +38,6 @@ class CatequizandoUpdateView(View):
     form_class = CatequizandoUpdateMiniForm
 
     def get(self, request, pk):
-        # Obtener datos actuales del catequizando
         cateq = Catequizando.objects.get(personaid_id=pk)
 
         form = self.form_class(initial={
@@ -86,6 +84,7 @@ class CatequizandoUpdateView(View):
 
         return render(request, self.template_name, {"form": form, "pk": pk})
 
+
 class CatequizandoCreateView(FormView):
     template_name = "catequizandos/crear.html"
     form_class = CatequizandoSPForm
@@ -93,14 +92,66 @@ class CatequizandoCreateView(FormView):
     def form_valid(self, form):
         data = form.cleaned_data
 
+        # --- CORRECCIÓN DE FECHAS ---
+        # 1. Catequizando: Es obligatorio en el form, solo convertimos a string.
+        fecha_nacimiento_str = str(data["fechanacimiento"])
+
+        # 2. Padre: Si viene vacío o None, enviamos '1900-01-01' para evitar error de SQL (NOT NULL).
+        if data.get("fnacimientopadre"):
+            f_padre = str(data["fnacimientopadre"])
+        else:
+            f_padre = '1900-01-01'
+
+        # 3. Madre: Misma lógica de protección.
+        if data.get("fnacimientomadre"):
+            f_madre = str(data["fnacimientomadre"])
+        else:
+            f_madre = '1900-01-01'
+        # ----------------------------
+
         with connection.cursor() as cursor:
-            # Convertir ModelChoiceField a PK
-            values = []
-            for key, value in data.items():
-                if key == "parroquiaid":
-                    values.append(value.pk)  # Convertimos Parroquia -> ID
-                else:
-                    values.append(value)
+            values = [
+                data["cedula"],
+                data["primernombre"],
+                data["segundonombre"], 
+                data["primerapellido"],
+                data["segundoapellido"],
+                fecha_nacimiento_str,       # <--- Usamos la variable convertida
+                data["genero"],
+                data["telefono"],
+                data["correo"],
+                data["calleprincipal"],
+                data["callesecundaria"],
+                data["sector"],
+                data["parroquiaid"].pk, 
+                data["paisnacimiento"],
+                data["ciudadnacimiento"],
+                data["numerohijo"],
+                data["numerohermanos"],
+                data["estado"],
+                data["anioencurso"],
+                data["tiposangre"],
+                data["alergia"],
+                data["comentario"],
+                data["cedulapadre"],
+                data["pnombrepadre"],
+                data["snombrepadre"],
+                data["papellidopadre"],
+                data["sapellidopadre"],
+                f_padre,                    # <--- Usamos la variable protegida padre
+                data["telefonopadre"],
+                data["correopadre"],
+                data["ocupacionpadre"],
+                data["cedulamadre"],
+                data["pnombremadre"],
+                data["snombremadre"],
+                data["papellidomadre"],
+                data["sapellidomadre"],
+                f_madre,                    # <--- Usamos la variable protegida madre
+                data["telefonomadre"],
+                data["correomadre"],
+                data["ocupacionmadre"]
+            ]
 
             cursor.execute("""
                 EXEC Participante.sp_InsertarCatequizando
@@ -146,8 +197,8 @@ class CatequizandoCreateView(FormView):
                     @OcupacionMadre=%s
             """, values)
 
-
         return redirect("catequizando_listar")
+
 
 def catequizando_eliminar(request, persona_id):
     with connection.cursor() as cursor:
@@ -170,7 +221,6 @@ def catequizando_buscar(request):
                 @Estado=%s
         """, [cedula, apellido, estado])
 
-        # Si no hay filas, cursor.description es None
         if cursor.description is None:
             catequizandos = []
         else:

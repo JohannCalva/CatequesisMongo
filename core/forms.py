@@ -104,7 +104,8 @@ class CatequizandoSPForm(forms.Form):
     segundoapellido = forms.CharField(max_length=50, label="Segundo Apellido", widget=forms.TextInput(attrs={'class': 'form-control'}))
     
     fechanacimiento = forms.DateField(
-        label="Fecha de Nacimiento", 
+        label="Fecha Nacimiento Padre", 
+        required=False,
         widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
     )
     

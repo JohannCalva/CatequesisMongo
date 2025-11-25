@@ -22,11 +22,12 @@
 
             <div class="card shadow-sm border-0 rounded-4 edit-card mb-4">
                 <div class="form-header bg-primary bg-opacity-10 border-bottom-0">
-                    <h4 class="fw-bold text-primary mb-0"><i class="bi bi-person-circle me-2"></i>Datos del Catequizando</h4>
+                    <h4 class="fw-bold text-primary mb-0"><i class="bi bi-person-circle me-2"></i>Datos del Catequizando
+                    </h4>
                 </div>
-                
+
                 <div class="card-body p-4">
-                    
+
                     <h6 class="text-uppercase text-muted fw-bold mb-3 small ls-1">Identidad & Nacimiento</h6>
                     <div class="row g-3 mb-4">
                         <div class="col-md-3">
@@ -115,9 +116,9 @@
                             {{ form.numerohermanos }}
                         </div>
                     </div>
-                    
+
                     <div class="row g-3 mb-3">
-                         <div class="col-md-3">
+                        <div class="col-md-3">
                             <label class="form-label text-danger">Tipo de Sangre</label>
                             {{ form.tiposangre }}
                         </div>
@@ -126,13 +127,13 @@
                             {{ form.alergia }}
                         </div>
                     </div>
-                    
+
                     <div class="row g-3">
-                         <div class="col-md-6">
+                        <div class="col-md-6">
                             <label class="form-label">Ciudad de Nacimiento</label>
                             {{ form.ciudadnacimiento }}
                         </div>
-                         <div class="col-md-6">
+                        <div class="col-md-6">
                             <label class="form-label">País</label>
                             {{ form.paisnacimiento }}
                         </div>
@@ -150,20 +151,33 @@
                 <div class="form-header bg-secondary bg-opacity-10 border-bottom-0">
                     <h4 class="fw-bold text-secondary mb-0"><i class="bi bi-people-fill me-2"></i>Datos Familiares</h4>
                 </div>
-                
+
                 <div class="card-body p-4">
-                    <div class="row g-5"> <div class="col-lg-6 border-end-lg"> <h5 class="fw-bold text-dark mb-3"><i class="bi bi-gender-male text-primary me-2"></i>Datos del Padre</h5>
-                            
+                    <div class="row g-5">
+
+                        <div class="col-lg-6 border-end-lg">
+                            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-gender-male text-primary me-2"></i>Datos
+                                del Padre</h5>
+
                             <div class="row g-2 mb-2">
-                                <div class="col-12"><label class="small text-muted">Cédula</label>{{ form.cedulapadre }}</div>
+                                <div class="col-6"><label class="small text-muted">Cédula</label>
+                                    {{ form.cedulapadre }}
+                                </div>
+                                <div class="col-6"><label class="small text-muted">F. Nacimiento</label>
+                                    {{ form.fnacimientopadre }}</div>
+                            </div>
+
+                            <div class="row g-2 mb-2">
+                                <div class="col-6"><label class="small text-muted">1er Nombre</label>
+                                    {{ form.pnombrepadre }}</div>
+                                <div class="col-6"><label class="small text-muted">2do Nombre</label>
+                                    {{ form.snombrepadre }}</div>
                             </div>
                             <div class="row g-2 mb-2">
-                                <div class="col-6"><label class="small text-muted">1er Nombre</label>{{ form.pnombrepadre }}</div>
-                                <div class="col-6"><label class="small text-muted">2do Nombre</label>{{ form.snombrepadre }}</div>
-                            </div>
-                            <div class="row g-2 mb-2">
-                                <div class="col-6"><label class="small text-muted">1er Apellido</label>{{ form.papellidopadre }}</div>
-                                <div class="col-6"><label class="small text-muted">2do Apellido</label>{{ form.sapellidopadre }}</div>
+                                <div class="col-6"><label class="small text-muted">1er Apellido</label>
+                                    {{ form.papellidopadre }}</div>
+                                <div class="col-6"><label class="small text-muted">2do Apellido</label>
+                                    {{ form.sapellidopadre }}</div>
                             </div>
                             <div class="mb-2">
                                 <label class="small text-muted">Teléfono</label>
@@ -173,21 +187,30 @@
                                 <label class="small text-muted">Ocupación</label>
                                 {{ form.ocupacionpadre }}
                             </div>
-                             </div>
+                        </div>
 
                         <div class="col-lg-6">
-                            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-gender-female text-danger me-2"></i>Datos de la Madre</h5>
-                            
+                            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-gender-female text-danger me-2"></i>Datos
+                                de la Madre</h5>
+
                             <div class="row g-2 mb-2">
-                                <div class="col-12"><label class="small text-muted">Cédula</label>{{ form.cedulamadre }}</div>
+                                <div class="col-6"><label class="small text-muted">Cédula</label>{{ form.cedulamadre }}
+                                </div>
+                                <div class="col-6"><label class="small text-muted">F. Nacimiento</label>
+                                    {{ form.fnacimientomadre }}</div>
+                            </div>
+
+                            <div class="row g-2 mb-2">
+                                <div class="col-6"><label class="small text-muted">1er Nombre</label>
+                                    {{ form.pnombremadre }}</div>
+                                <div class="col-6"><label class="small text-muted">2do Nombre</label>
+                                    {{ form.snombremadre }}</div>
                             </div>
                             <div class="row g-2 mb-2">
-                                <div class="col-6"><label class="small text-muted">1er Nombre</label>{{ form.pnombremadre }}</div>
-                                <div class="col-6"><label class="small text-muted">2do Nombre</label>{{ form.snombremadre }}</div>
-                            </div>
-                            <div class="row g-2 mb-2">
-                                <div class="col-6"><label class="small text-muted">1er Apellido</label>{{ form.papellidomadre }}</div>
-                                <div class="col-6"><label class="small text-muted">2do Apellido</label>{{ form.sapellidomadre }}</div>
+                                <div class="col-6"><label class="small text-muted">1er Apellido</label>
+                                    {{ form.papellidomadre }}</div>
+                                <div class="col-6"><label class="small text-muted">2do Apellido</label>
+                                    {{ form.sapellidomadre }}</div>
                             </div>
                             <div class="mb-2">
                                 <label class="small text-muted">Teléfono</label>
