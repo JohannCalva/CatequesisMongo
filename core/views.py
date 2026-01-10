@@ -114,6 +114,14 @@ class CatequizandoCreateView(FormView):
             f_madre = str(data["fnacimientomadre"])
         else:
             f_madre = '1900-01-01'
+        
+        # 4. Fe de Bautismo: Handling Nulls
+        parroquia_bautismo = data.get("parroquiabautismoid")
+        parroquia_bautismo_id = parroquia_bautismo.pk if parroquia_bautismo else None
+        
+        fecha_bautismo = data.get("fechabautismo")
+        fecha_bautismo_str = str(fecha_bautismo) if fecha_bautismo else None
+
         # ----------------------------
 
         with connection.cursor() as cursor:
@@ -123,7 +131,7 @@ class CatequizandoCreateView(FormView):
                 data["segundonombre"], 
                 data["primerapellido"],
                 data["segundoapellido"],
-                fecha_nacimiento_str,       # <--- Usamos la variable convertida
+                fecha_nacimiento_str,
                 data["genero"],
                 data["telefono"],
                 data["correo"],
@@ -145,7 +153,7 @@ class CatequizandoCreateView(FormView):
                 data["snombrepadre"],
                 data["papellidopadre"],
                 data["sapellidopadre"],
-                f_padre,                    # <--- Usamos la variable protegida padre
+                f_padre,
                 data["telefonopadre"],
                 data["correopadre"],
                 data["ocupacionpadre"],
@@ -154,10 +162,15 @@ class CatequizandoCreateView(FormView):
                 data["snombremadre"],
                 data["papellidomadre"],
                 data["sapellidomadre"],
-                f_madre,                    # <--- Usamos la variable protegida madre
+                f_madre,
                 data["telefonomadre"],
                 data["correomadre"],
-                data["ocupacionmadre"]
+                data["ocupacionmadre"],
+                # Nuevos parametros Fe de Bautismo
+                parroquia_bautismo_id,
+                fecha_bautismo_str,
+                data.get("numerotomo"),
+                data.get("paginatomo")
             ]
 
             cursor.execute("""
@@ -201,7 +214,11 @@ class CatequizandoCreateView(FormView):
                     @FNacimientoMadre=%s,
                     @TelefonoMadre=%s,
                     @CorreoMadre=%s,
-                    @OcupacionMadre=%s
+                    @OcupacionMadre=%s,
+                    @ParroquiaBautismoID=%s,
+                    @FechaBautismo=%s,
+                    @NumeroTomo=%s,
+                    @PaginaTomo=%s
             """, values)
 
         return redirect("catequizando_listar")

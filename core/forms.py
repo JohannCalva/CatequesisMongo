@@ -227,7 +227,33 @@ class CatequizandoSPForm(forms.Form):
             'maxlength': '10',
             'inputmode': 'numeric'}))
     correomadre = forms.EmailField(max_length=50, required=False, label="Correo Madre", widget=forms.EmailInput(attrs={'class': 'form-control'}))
+    correomadre = forms.EmailField(max_length=50, required=False, label="Correo Madre", widget=forms.EmailInput(attrs={'class': 'form-control'}))
     ocupacionmadre = forms.CharField(max_length=100, required=False, label="Ocupación Madre", widget=forms.TextInput(attrs={'class': 'form-control'}))
+
+    # -----------------------
+    # E) Fe de Bautismo
+    # -----------------------
+    parroquiabautismoid = forms.ModelChoiceField(
+        queryset=Parroquia.objects.all(),
+        label="Parroquia de Bautismo",
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    fechabautismo = forms.DateField(
+        label="Fecha Bautismo",
+        required=False,
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
+    )
+    numerotomo = forms.IntegerField(
+        label="Número de Tomo", 
+        required=False,
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )
+    paginatomo = forms.IntegerField(
+        label="Página Tomo", 
+        required=False,
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )
 
 # ==========================================
 # 4. Formularios para GRUPOS
