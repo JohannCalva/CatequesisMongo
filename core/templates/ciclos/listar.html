@@ -1,57 +1,72 @@
 {% extends 'base.html' %}
 
-{% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Gestión de Ciclos</h2>
-        <a href="{% url 'ciclo_crear' %}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Nuevo Ciclo
-        </a>
-    </div>
+{% block title %}Gestión de Ciclos{% endblock %}
 
-    <div class="card">
-        <div class="card-body">
-            <table class="table table-striped table-hover">
-                <thead class="table-dark">
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-0 text-dark">Ciclos de Catequesis</h2>
+        <p class="text-muted small mb-0">Periodos lectivos y cronograma.</p>
+    </div>
+    <a href="{% url 'ciclo_crear' %}" class="btn btn-primary shadow-sm px-4 rounded-pill">
+        <i class="bi bi-calendar-plus me-1"></i> Nuevo Ciclo
+    </a>
+</div>
+
+<div class="card table-card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead>
                     <tr>
-                        <th>Nombre</th>
+                        <th class="ps-4">Nombre</th>
                         <th>Fecha Inicio</th>
                         <th>Fecha Fin</th>
                         <th>Estado</th>
-                        <th>Acciones</th>
+                        <th class="text-end pe-4">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for ciclo in ciclos %}
                     <tr>
-                        <td>{{ ciclo.NombreCiclo }}</td>
-                        <td>{{ ciclo.FechaInicio }}</td>
-                        <td>{{ ciclo.FechaFin }}</td>
+                        <td class="ps-4 fw-bold text-dark">{{ ciclo.nombre }}</td>
+                        <td>{{ ciclo.fecha_inicio|date:"d M Y" }}</td>
+                        <td>{{ ciclo.fecha_fin|date:"d M Y" }}</td>
                         <td>
-                            {% if ciclo.Estado == 'Activo' %}
-                            <span class="badge bg-success">Activo</span>
+                            {% if ciclo.estado == 'ABIERTO' or ciclo.estado == 'INSCRIPCIONES' %}
+                            <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">{{ ciclo.estado|title }}</span>
                             {% else %}
-                            <span class="badge bg-secondary">{{ ciclo.Estado }}</span>
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-3">{{ ciclo.estado|title }}</span>
                             {% endif %}
                         </td>
-                        <td>
-                            <a href="{% url 'ciclo_detalle' pk=ciclo.CicloID %}" class="btn btn-sm btn-info"
-                                title="Ver Detalle">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <a href="{% url 'ciclo_editar' pk=ciclo.CicloID %}" class="btn btn-sm btn-warning"
-                                title="Editar">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <a href="{% url 'ciclo_eliminar' pk=ciclo.CicloID %}" class="btn btn-sm btn-danger"
-                                onclick="return confirm('¿Está seguro de eliminar este ciclo?');" title="Eliminar">
-                                <i class="fas fa-trash"></i>
-                            </a>
+                        <td class="text-end pe-4">
+                            <div class="d-inline-flex gap-1">
+                                <a href="{% url 'ciclo_detalle' pk=ciclo.pk %}" class="btn btn-action btn-outline-info"
+                                    title="Ver Detalle" data-bs-toggle="tooltip">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'ciclo_editar' pk=ciclo.pk %}"
+                                    class="btn btn-action btn-outline-warning" title="Editar" data-bs-toggle="tooltip">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'ciclo_eliminar' pk=ciclo.pk %}"
+                                    class="btn btn-action btn-outline-danger"
+                                    onclick="return confirm('¿Está seguro de eliminar este ciclo?');" title="Eliminar"
+                                    data-bs-toggle="tooltip">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="5" class="text-center">No hay ciclos registrados.</td>
+                        <td colspan="5" class="text-center py-5">
+                            <div class="py-4">
+                                <i class="bi bi-calendar-x text-muted display-4 opacity-50"></i>
+                                <h5 class="mt-3 text-muted fw-normal">No hay ciclos registrados</h5>
+                            </div>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -59,4 +74,13 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+</script>
 {% endblock %}

@@ -1,20 +1,35 @@
 from django import forms
-from .models import Catequizando, Parroquia, NivelCatequesis, CicloCatequesis, Grupo, CicloCatequesis
+from .models import Catequizando, Nivel, Ciclo, Grupo, Inscripcion
 
 ESTADO_GENERAL = [
-    ('Activo', 'Activo'),
-    ('Inactivo', 'Inactivo'),
+    ('ABIERTO', 'Abierto'),
+    ('CERRADO', 'Cerrado'),
+    ('INSCRIPCIONES', 'Inscripciones'),
+]
+
+# Updating to match Model choices if possible, or keep simple strings
+ESTADO_GRUPO = [
+    ('ACTIVO', 'Activo'),
+    ('INACTIVO', 'Inactivo'),
 ]
 
 ESTADO_INSCRIPCION = [
-    ('Activo', 'Activo'),
-    ('Rechazado', 'Rechazado'),
-    ('Aprobado', 'Aprobado'),
+    ('CURSANDO', 'Cursando'),
+    ('APROBADO', 'Aprobado'),
+    ('REPROBADO', 'Reprobado'),
+    ('RETIRADO', 'Retirado'),
 ]
 
 ESTADO_PAGO = [
-    ('Pagado', 'Pagado'),
-    ('Pendiente', 'Pendiente'),
+    ('PAGADO', 'Pagado'),
+    ('PENDIENTE', 'Pendiente'),
+]
+
+# Form options
+ESTADO_ASISTENCIA = [
+    ('PRESENTE', 'Presente'),
+    ('FALTA', 'Falta'),
+    ('JUSTIFICADA', 'Justificada'),
 ]
 
 
@@ -65,7 +80,7 @@ class CatequizandoUpdateMiniForm(forms.Form):
     )
     
     estado = forms.ChoiceField(
-        choices=ESTADO_GENERAL,
+        choices=ESTADO_GRUPO, # Using Estado Grupo as 'General' state proxy? Or maybe just text.
         widget=forms.Select(attrs={'class': 'form-select'})
     )
     
@@ -144,10 +159,11 @@ class CatequizandoSPForm(forms.Form):
     # -----------------------
     # C) Catequizando (AQUÍ ESTÁN LOS CAMBIOS PRINCIPALES)
     # -----------------------
-    parroquiaid = forms.ModelChoiceField(
-        queryset=Parroquia.objects.all(),
+    # Parroquia ahora es CharField porque no hay coleccion Parroquia
+    parroquiaid = forms.CharField(
         label="Parroquia",
-        widget=forms.Select(attrs={'class': 'form-select'})
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
     )
     paisnacimiento = forms.CharField(max_length=25, label="País de Nacimiento", widget=forms.TextInput(attrs={'class': 'form-control'}))
     ciudadnacimiento = forms.CharField(max_length=50, label="Ciudad de Nacimiento", widget=forms.TextInput(attrs={'class': 'form-control'}))
@@ -156,7 +172,7 @@ class CatequizandoSPForm(forms.Form):
     
     # CAMBIO: Estado ahora es Select
     estado = forms.ChoiceField(
-        choices=ESTADO_GENERAL, 
+        choices=ESTADO_GRUPO, # Assuming 'Estado' refers to Active/Inactive status
         label="Estado",
         widget=forms.Select(attrs={'class': 'form-select'})
     )
@@ -227,17 +243,15 @@ class CatequizandoSPForm(forms.Form):
             'maxlength': '10',
             'inputmode': 'numeric'}))
     correomadre = forms.EmailField(max_length=50, required=False, label="Correo Madre", widget=forms.EmailInput(attrs={'class': 'form-control'}))
-    correomadre = forms.EmailField(max_length=50, required=False, label="Correo Madre", widget=forms.EmailInput(attrs={'class': 'form-control'}))
     ocupacionmadre = forms.CharField(max_length=100, required=False, label="Ocupación Madre", widget=forms.TextInput(attrs={'class': 'form-control'}))
 
     # -----------------------
     # E) Fe de Bautismo
     # -----------------------
-    parroquiabautismoid = forms.ModelChoiceField(
-        queryset=Parroquia.objects.all(),
+    parroquiabautismoid = forms.CharField(
         label="Parroquia de Bautismo",
         required=False,
-        widget=forms.Select(attrs={'class': 'form-select'})
+        widget=forms.TextInput(attrs={'class': 'form-control'})
     )
     fechabautismo = forms.DateField(
         label="Fecha Bautismo",
@@ -261,12 +275,12 @@ class CatequizandoSPForm(forms.Form):
 
 class GrupoForm(forms.Form):
     nivelcatequesis = forms.ModelChoiceField(
-        queryset=NivelCatequesis.objects.all(),
+        queryset=Nivel.objects.all(),
         label="Nivel",
         widget=forms.Select(attrs={'class': 'form-select'})
     )
     ciclo = forms.ModelChoiceField(
-        queryset=CicloCatequesis.objects.all().order_by('-fechainicio'),
+        queryset=Ciclo.objects.all().order_by('-fecha_inicio'),
         label="Ciclo",
         widget=forms.Select(attrs={'class': 'form-select'})
     )
@@ -276,7 +290,7 @@ class GrupoForm(forms.Form):
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
     estado = forms.ChoiceField(
-        choices=ESTADO_GENERAL,
+        choices=ESTADO_GRUPO,
         widget=forms.Select(attrs={'class': 'form-select'})
     )
 
@@ -288,7 +302,7 @@ class GrupoUpdateForm(forms.Form):
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
     estado = forms.ChoiceField(
-        choices=ESTADO_GENERAL,
+        choices=ESTADO_GRUPO,
         widget=forms.Select(attrs={'class': 'form-select'})
     )
 
@@ -303,16 +317,18 @@ class InscripcionCreateForm(forms.Form):
         widget=forms.Select(attrs={'class': 'form-select'})
     )
     grupo = forms.ModelChoiceField(
-        queryset=Grupo.objects.filter(estado='Activo'),
+        queryset=Grupo.objects.filter(estado='ACTIVO'), # Changed to 'ACTIVO' matching model
         label="Grupo",
         widget=forms.Select(attrs={'class': 'form-select'})
     )
     estadopago = forms.ChoiceField(
         choices=ESTADO_PAGO,
         label="Estado de Pago",
-        initial='Pagado',
+        initial='PAGADO', # Changed to match model choice
         widget=forms.Select(attrs={'class': 'form-select'})
     )
+    # esexcepcion: Not present in new schema, but keeping in form for now in case logic uses it, 
+    # but we will likely ignore it in saving.
     esexcepcion = forms.BooleanField(
         required=False,
         label="Es Excepción",
@@ -337,6 +353,30 @@ class InscripcionUpdateForm(forms.Form):
         widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
     )
 
+class AsistenciaForm(forms.Form):
+    sesion_id = forms.IntegerField(
+        label="Número de Sesión",
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )
+    estado = forms.ChoiceField(
+        choices=ESTADO_ASISTENCIA,
+        label="Estado",
+        initial='PRESENTE',
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+
+class CalificacionForm(forms.Form):
+    descripcion = forms.CharField(
+        label="Descripción",
+        max_length=100,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Examen Parcial 1'})
+    )
+    valor = forms.FloatField(
+        label="Nota",
+        min_value=0,
+        max_value=10,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.1'})
+    )
 
 # ==========================================
 # 6. Formularios para CICLOS

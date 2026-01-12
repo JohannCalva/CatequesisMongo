@@ -12,62 +12,55 @@
 
 <div class="card profile-header-card mb-4 p-4">
     <div class="d-flex flex-column flex-md-row align-items-center gap-4">
-        
+
         <div class="avatar-lg">
-            {{ catequizando.personaid.primernombre|slice:":1" }}
+            {{ catequizando.primer_nombre|slice:":1" }}
         </div>
 
         <div class="flex-grow-1 text-center text-md-start">
             <h2 class="fw-bold mb-1">
-                {{ catequizando.personaid.primernombre }} {{ catequizando.personaid.primerapellido }}
+                {{ catequizando.primer_nombre }} {{ catequizando.primer_apellido }}
             </h2>
             <p class="text-muted mb-2 font-monospace">
-                <i class="bi bi-person-vcard me-1"></i> {{ catequizando.personaid.cedula }}
+                <i class="bi bi-person-vcard me-1"></i> {{ catequizando.cedula }}
             </p>
-            
-            {% if catequizando.estado == 'Activo' or catequizando.estado == True %}
-                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 border border-success border-opacity-25">
-                    Activo
-                </span>
-            {% else %}
-                <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-3 border border-secondary border-opacity-25">
-                    Inactivo
-                </span>
-            {% endif %}
+
+            <span
+                class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 border border-success border-opacity-25">
+                Registrado
+            </span>
         </div>
 
         <div class="d-flex gap-2">
-            <a href="{% url 'catequizando_editar' catequizando.personaid_id %}" class="btn btn-warning shadow-sm">
+            <a href="{% url 'catequizando_editar' catequizando.pk %}" class="btn btn-warning shadow-sm">
                 <i class="bi bi-pencil-square me-2"></i>Editar
-            </a>
-            <a href="#" class="btn btn-outline-danger" onclick="return confirm('¿Eliminar?');">
-                <i class="bi bi-trash"></i>
             </a>
         </div>
     </div>
 </div>
 
-<div class="card card-section p-4 mb-5"> <h5 class="fw-bold text-primary mb-3 pb-2 border-bottom">
+<div class="card card-section p-4 mb-5">
+    <h5 class="fw-bold text-primary mb-3 pb-2 border-bottom">
         <i class="bi bi-person-lines-fill me-2"></i>Información Personal
     </h5>
-    
+
     <div class="row g-4 mb-4">
         <div class="col-md-4">
             <div class="detail-label"><i class="bi bi-cake2 me-1"></i> Fecha de Nacimiento</div>
             <div class="detail-value">
-                {{ catequizando.personaid.fechanacimiento|date:"d \d\e F \d\e Y" }}
+                {{ catequizando.fecha_nacimiento|date:"d \d\e F \d\e Y" }}
             </div>
         </div>
 
         <div class="col-md-4">
             <div class="detail-label"><i class="bi bi-gender-ambiguous me-1"></i> Género</div>
             <div class="detail-value">
-                {% if catequizando.personaid.genero == 'M' %}
-                    Masculino
-                {% elif catequizando.personaid.genero == 'F' %}
-                    Femenino
+                {% if catequizando.genero == 'M' %}
+                Masculino
+                {% elif catequizando.genero == 'F' %}
+                Femenino
                 {% else %}
-                    {{ catequizando.personaid.genero }}
+                {{ catequizando.genero }}
                 {% endif %}
             </div>
         </div>
@@ -75,7 +68,14 @@
         <div class="col-md-4">
             <div class="detail-label"><i class="bi bi-telephone me-1"></i> Teléfono</div>
             <div class="detail-value">
-                {{ catequizando.personaid.telefono|default:"No registrado" }}
+                {{ catequizando.telefono_casa|default:"No registrado" }}
+            </div>
+        </div>
+
+        <div class="col-md-12">
+            <div class="detail-label"><i class="bi bi-map me-1"></i> Dirección</div>
+            <div class="detail-value">
+                {{ catequizando.direccion }}
             </div>
         </div>
     </div>
@@ -88,47 +88,74 @@
         <div class="col-md-4">
             <div class="detail-label"><i class="bi bi-droplet-fill me-1"></i> Tipo de Sangre</div>
             <div class="detail-value text-danger fw-bold">
-                {{ catequizando.tiposangre|default:"--" }}
+                {{ catequizando.informacion_salud.tipo_sangre|default:"--" }}
             </div>
         </div>
 
         <div class="col-md-8">
             <div class="detail-label"><i class="bi bi-exclamation-triangle me-1"></i> Alergias</div>
             <div class="detail-value">
-                {% if catequizando.alergia %}
-                    <span class="text-danger fw-bold bg-danger bg-opacity-10 px-2 py-1 rounded">
-                        {{ catequizando.alergia }}
-                    </span>
+                {% if catequizando.informacion_salud and catequizando.informacion_salud.alergias %}
+                {% for a in catequizando.informacion_salud.alergias %}
+                <span class="text-danger fw-bold bg-danger bg-opacity-10 px-2 py-1 rounded me-1">
+                    {{ a }}
+                </span>
+                {% endfor %}
                 {% else %}
-                    <span class="text-muted"><i class="bi bi-check2-circle"></i> Ninguna alergia registrada</span>
+                <span class="text-muted"><i class="bi bi-check2-circle"></i> Ninguna alergia registrada</span>
                 {% endif %}
             </div>
         </div>
     </div>
 
     <h5 class="fw-bold text-warning mb-3 pb-2 border-bottom pt-2" style="color: #fd7e14 !important;">
-        <i class="bi bi-book me-2"></i>Datos Pastorales
+        <i class="bi bi-book me-2"></i>Datos Pastorales / Escolaridad
     </h5>
 
-    <div class="row g-4">
+    <div class="row g-4 mb-4">
         <div class="col-md-4">
             <div class="detail-label"><i class="bi bi-calendar-event me-1"></i> Año en Curso</div>
             <div class="detail-value fs-5">
-                {{ catequizando.anioencurso }}
+                {{ catequizando.escolaridad.anio_en_curso }}
             </div>
         </div>
 
         <div class="col-md-8">
             <div class="detail-label"><i class="bi bi-chat-square-text me-1"></i> Comentarios / Observaciones</div>
             <div class="p-3 bg-light rounded border-start border-4 border-warning text-muted">
-                {% if catequizando.comentario %}
-                    {{ catequizando.comentario }}
-                {% else %}
-                    <em>Sin comentarios adicionales.</em>
-                {% endif %}
+                {{ catequizando.observaciones_generales|default:"Sin comentarios adicionales." }}
             </div>
         </div>
     </div>
+
+    <h5 class="fw-bold text-info mb-3 pb-2 border-bottom pt-2">
+        <i class="bi bi-people me-2"></i>Familiares
+    </h5>
+
+    {% if catequizando.padres %}
+    <div class="table-responsive">
+        <table class="table table-sm table-borderless">
+            <thead>
+                <tr class="text-muted small text-uppercase">
+                    <th>Relación</th>
+                    <th>Nombre</th>
+                    <th>Teléfono</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in catequizando.padres %}
+                <tr>
+                    <td class="fw-bold text-primary">{{ p.relacion }}</td>
+                    <td>{{ p.nombres }} {{ p.apellidos }}</td>
+                    <td>{{ p.telefono }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted">No hay información de padres registrada.</p>
+    {% endif %}
 
 </div>
 

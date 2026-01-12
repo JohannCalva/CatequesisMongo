@@ -1,87 +1,147 @@
 {% extends 'base.html' %}
 
-{% block title %}Detalle Inscripción{% endblock %}
+{% block title %}Detalle de Inscripción{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row mb-4">
-        <div class="col">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{% url 'inscripcion_listar' %}">Inscripciones</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Detalle</li>
-                </ol>
-            </nav>
+<div class="mb-3">
+    <a href="{% url 'inscripcion_listar' %}" class="text-decoration-none text-muted fw-bold">
+        <i class="bi bi-arrow-left me-1"></i> Volver al listado
+    </a>
+</div>
+
+<div class="card profile-header-card mb-4 p-4">
+    <div class="d-flex flex-column flex-md-row align-items-center gap-4">
+
+        <div class="avatar-lg bg-primary">
+            {{ inscripcion.catequizando.primer_nombre|slice:":1" }}
+        </div>
+
+        <div class="flex-grow-1 text-center text-md-start">
+            <h5 class="text-muted text-uppercase small fw-bold mb-1">Catequizando</h5>
+            <h2 class="fw-bold mb-1">
+                {{ inscripcion.catequizando.primer_nombre }} {{ inscripcion.catequizando.primer_apellido }}
+            </h2>
+            <p class="text-secondary mb-2">
+                <i class="bi bi-people-fill me-1"></i> Grupo: <span class="fw-bold text-dark">{{ inscripcion.grupo.nombre_grupo }}</span>
+            </p>
+
+            <div class="d-flex gap-2 justify-content-center justify-content-md-start mt-2">
+                <span
+                    class="badge {% if inscripcion.estado_inscripcion == 'CURSANDO' %}bg-info bg-opacity-10 text-info{% else %}bg-secondary{% endif %} rounded-pill px-3 border">
+                    {{ inscripcion.estado_inscripcion|title }}
+                </span>
+                <span
+                    class="badge {% if inscripcion.estado_pago == 'PAGADO' %}bg-success bg-opacity-10 text-success{% else %}bg-warning bg-opacity-10 text-warning{% endif %} rounded-pill px-3 border">
+                    Pago: {{ inscripcion.estado_pago|title }}
+                </span>
+            </div>
+        </div>
+
+        <div class="d-flex flex-column gap-2">
+            <a href="{% url 'inscripcion_asistencia' inscripcion.catequizando.pk inscripcion.grupo.pk %}"
+                class="btn btn-outline-primary btn-sm shadow-sm">
+                <i class="bi bi-calendar-check me-1"></i> Tomar Asistencia
+            </a>
+            <a href="{% url 'inscripcion_nota' inscripcion.catequizando.pk inscripcion.grupo.pk %}"
+                class="btn btn-outline-success btn-sm shadow-sm">
+                <i class="bi bi-mortarboard me-1"></i> Agregar Nota
+            </a>
+            <a href="{% url 'inscripcion_editar' inscripcion.catequizando.pk inscripcion.grupo.pk %}"
+                class="btn btn-warning btn-sm shadow-sm">
+                <i class="bi bi-pencil-square me-1"></i> Editar Estado
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Notas -->
+    <div class="col-md-6">
+        <div class="card card-section h-100">
+            <div class="card-header bg-white border-bottom-0 pt-4 px-4 pb-0">
+                <h5 class="fw-bold text-primary mb-0">
+                    <i class="bi bi-journal-check me-2"></i>Calificaciones
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                {% if inscripcion.calificaciones %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light small text-uppercase">
+                            <tr>
+                                <th>Concepto</th>
+                                <th class="text-center">Nota</th>
+                                <th class="text-end">Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for n in inscripcion.calificaciones %}
+                            <tr>
+                                <td>{{ n.descripcion }}</td>
+                                <td class="text-center fw-bold">{{ n.valor }}</td>
+                                <td class="text-end text-muted small">{{ n.fecha }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5 bg-light rounded border border-dashed text-muted">
+                    <i class="bi bi-clipboard-x display-6 mb-2 opacity-50"></i>
+                    <p class="mb-0">Sin calificaciones registradas</p>
+                </div>
+                {% endif %}
+            </div>
         </div>
     </div>
 
-    <div class="card shadow">
-        <div class="card-header bg-primary text-white">
-            <h3 class="mb-0">Detalle de Inscripción</h3>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <h4 class="text-primary mb-3">Catequizando</h4>
-                    <p class="fs-5">
-                        {{ inscripcion.catequizando_personaid.personaid.primernombre }}
-                        {{ inscripcion.catequizando_personaid.personaid.primerapellido }}
-                    </p>
-                    <p><strong>Cédula:</strong> {{ inscripcion.catequizando_personaid.personaid.cedula }}</p>
-                </div>
-                <div class="col-md-6 border-start">
-                    <h4 class="text-primary mb-3">Grupo Asignado</h4>
-                    <p class="fs-5">{{ inscripcion.grupo.nombregrupo }}</p>
-                    <p><strong>Nivel:</strong> {{ inscripcion.grupo.nivelcatequesis.nombre }}</p>
-                    <p><strong>Ciclo:</strong> {{ inscripcion.grupo.ciclo.nombreciclo }}</p>
-                </div>
+    <!-- Asistencia -->
+    <div class="col-md-6">
+        <div class="card card-section h-100">
+            <div class="card-header bg-white border-bottom-0 pt-4 px-4 pb-0">
+                <h5 class="fw-bold text-info mb-0">
+                    <i class="bi bi-calendar3 me-2"></i>Historial de Asistencia
+                </h5>
             </div>
-
-            <hr>
-
-            <div class="row mt-4">
-                <div class="col-md-4">
-                    <div class="card bg-light">
-                        <div class="card-body text-center">
-                            <h6 class="text-muted">Estado Inscripción</h6>
-                            <span class="badge bg-info fs-6">{{ inscripcion.estadoinscripcion }}</span>
-                        </div>
-                    </div>
+            <div class="card-body p-4">
+                {% if inscripcion.registro_asistencia %}
+                <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light small text-uppercase sticky-top">
+                            <tr>
+                                <th>Sesión ID</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for a in inscripcion.registro_asistencia %}
+                            <tr>
+                                <td class="fw-bold text-muted">Sesión #{{ a.sesion_id }}</td>
+                                <td>
+                                    {% if a.estado == 'PRESENTE' %}
+                                    <span
+                                        class="badge bg-success bg-opacity-10 text-success rounded-pill px-2">Presente</span>
+                                    {% elif a.estado == 'FALTA' %}
+                                    <span
+                                        class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-2">Falta</span>
+                                    {% elif a.estado == 'JUSTIFICADA' %}
+                                    <span
+                                        class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-2">Justificada</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary rounded-pill px-2">{{ a.estado }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
-                <div class="col-md-4">
-                    <div class="card bg-light">
-                        <div class="card-body text-center">
-                            <h6 class="text-muted">Estado Pago</h6>
-                            <span
-                                class="badge {% if inscripcion.estadopago == 'Pagado' %}bg-success{% else %}bg-warning{% endif %} fs-6">
-                                {{ inscripcion.estadopago }}
-                            </span>
-                        </div>
-                    </div>
+                {% else %}
+                <div class="text-center py-5 bg-light rounded border border-dashed text-muted">
+                    <i class="bi bi-calendar-x display-6 mb-2 opacity-50"></i>
+                    <p class="mb-0">No hay registros de asistencia</p>
                 </div>
-                <div class="col-md-4">
-                    <div class="card bg-light">
-                        <div class="card-body text-center">
-                            <h6 class="text-muted">Fecha Inscripción</h6>
-                            <p class="mb-0 fw-bold">{{ inscripcion.fechainscripcion|date:"d M Y" }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="mt-5 text-center">
-                <a href="{% url 'inscripcion_listar' %}" class="btn btn-secondary">
-                    Volver
-                </a>
-                <a href="{% url 'inscripcion_editar' inscripcion.catequizando_personaid.pk inscripcion.grupo.pk %}"
-                    class="btn btn-warning me-2">
-                    <i class="bi bi-pencil"></i> Editar Estado/Pago
-                </a>
-                <a href="{% url 'inscripcion_eliminar' inscripcion.catequizando_personaid.pk inscripcion.grupo.pk %}"
-                    class="btn btn-danger"
-                    onclick="return confirm('¿Está seguro de eliminar esta inscripción? Se borrarán asistencias y calificaciones.');">
-                    <i class="bi bi-trash"></i> Eliminar
-                </a>
+                {% endif %}
             </div>
         </div>
     </div>

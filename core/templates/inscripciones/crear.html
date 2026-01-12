@@ -4,31 +4,68 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card shadow-sm">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">Registrar Inscripción</h4>
+    <div class="col-lg-8">
+
+        <div class="mb-3">
+            <a href="{% url 'inscripcion_listar' %}" class="text-decoration-none text-muted fw-bold">
+                <i class="bi bi-arrow-left me-1"></i> Cancelar y Volver
+            </a>
+        </div>
+
+        <div class="card shadow border-0 rounded-4 edit-card">
+            <div class="form-header">
+                <h3 class="fw-bold mb-1">Registrar Inscripción</h3>
+                <p class="text-muted small mb-0">Matricular un catequizando en un grupo</p>
             </div>
-            <div class="card-body">
+
+            <div class="card-body p-4">
                 <form method="post">
                     {% csrf_token %}
 
-                    {% for field in form %}
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">{{ field.label }}</label>
-                        {{ field }}
-                        {% if field.help_text %}
-                        <div class="form-text">{{ field.help_text }}</div>
-                        {% endif %}
-                        {% for error in field.errors %}
-                        <div class="text-danger small">{{ error }}</div>
-                        {% endfor %}
-                    </div>
-                    {% endfor %}
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label class="form-label">Catequizando</label>
+                                {{ form.catequizando }}
+                                <div class="form-text text-muted small">Seleccione el estudiante. Se muestra Cédula -
+                                    Apellido Nombre.</div>
+                                {% if form.catequizando.errors %}
+                                <div class="text-danger small mt-1">{{ form.catequizando.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
 
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                        <a href="{% url 'inscripcion_listar' %}" class="btn btn-secondary me-md-2">Cancelar</a>
-                        <button type="submit" class="btn btn-primary">Inscribir</button>
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label class="form-label">Grupo</label>
+                                {{ form.grupo }}
+                                <div class="form-text text-muted small">Seleccione el grupo al cual será asignado.</div>
+                                {% if form.grupo.errors %}
+                                <div class="text-danger small mt-1">{{ form.grupo.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label class="form-label">Estado de Pago Inicial</label>
+                                {{ form.estadopago }}
+                                {% if form.estadopago.errors %}
+                                <div class="text-danger small mt-1">{{ form.estadopago.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{% url 'inscripcion_listar' %}" class="btn btn-light border px-4 fw-bold">
+                            Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary px-4 fw-bold shadow-sm">
+                            <i class="bi bi-person-plus-fill me-2"></i>Realizar Inscripción
+                        </button>
                     </div>
                 </form>
             </div>

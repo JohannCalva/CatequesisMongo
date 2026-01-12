@@ -1,318 +1,317 @@
 from django.db import models
-
-class Direccion(models.Model):
-    direccionid = models.IntegerField(db_column='DireccionID', primary_key=True)
-    calleprincipal = models.CharField(db_column='CallePrincipal', max_length=50)
-    callesecundaria = models.CharField(db_column='CalleSecundaria', max_length=50)
-    sector = models.CharField(db_column='Sector', max_length=50)
-
-    class Meta:
-        managed = False
-        db_table = 'Persona.Direccion'
-
-    def __str__(self):
-        return f"{self.calleprincipal} y {self.callesecundaria}"
-
-class Persona(models.Model):
-    personaid = models.IntegerField(db_column='PersonaID', primary_key=True)
-    cedula = models.CharField(db_column='Cedula', max_length=10, unique=True)
-    primernombre = models.CharField(db_column='PrimerNombre', max_length=50)
-    segundonombre = models.CharField(db_column='SegundoNombre', max_length=50, null=True, blank=True)
-    primerapellido = models.CharField(db_column='PrimerApellido', max_length=50)
-    segundoapellido = models.CharField(db_column='SegundoApellido', max_length=50)
-    fechanacimiento = models.DateField(db_column='FechaNacimiento')
-    genero = models.CharField(db_column='Genero', max_length=1)
-    telefono = models.CharField(db_column='Telefono', max_length=10, null=True, blank=True)
-    correo = models.CharField(db_column='Correo', max_length=50, null=True, blank=True)
-    direccion = models.ForeignKey(Direccion, on_delete=models.DO_NOTHING, db_column='DireccionID')
-
-    class Meta:
-        managed = False
-        db_table = 'Persona.Persona'
-
-    def __str__(self):
-        return f"{self.primernombre} {self.primerapellido}"
-
-class Parroquia(models.Model):
-    parroquiaid = models.IntegerField(db_column='ParroquiaID', primary_key=True)
-    direccionid = models.IntegerField(db_column='DireccionID')
-    nombre = models.CharField(db_column='Nombre', max_length=50)
-    telefono = models.CharField(db_column='Telefono', max_length=10)
-
-    class Meta:
-        managed = False
-        db_table = 'Informacion.Parroquia'
-
-    def __str__(self):
-        return str(self.nombre)
-
-class Parroco(models.Model):
-    personaid = models.IntegerField(db_column='PersonaID', primary_key=True)
-    parroquia = models.ForeignKey(Parroquia, on_delete=models.DO_NOTHING, db_column='ParroquiaID')
-    tipoparroco = models.CharField(db_column='TipoParroco', max_length=50)
-    estado = models.CharField(db_column='Estado', max_length=10)
-
-    class Meta:
-        managed = False
-        db_table = 'Informacion.Parroco'
-
-    def __str__(self):
-        return f"Parroco {self.personaid}"
+from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.exceptions import ValidationError
+from django_mongodb_backend.fields import ObjectIdAutoField
 
 class Catequizando(models.Model):
-    personaid = models.OneToOneField(Persona, on_delete=models.DO_NOTHING, db_column='PersonaID', primary_key=True)
-    parroquiaid = models.IntegerField(db_column='ParroquiaID')
-    paisnacimiento = models.CharField(db_column='PaisNacimiento', max_length=25)
-    ciudadnacimiento = models.CharField(db_column='CiudadNacimiento', max_length=50)
-    numerohijo = models.IntegerField(db_column='NumeroHijo')
-    numerohermanos = models.IntegerField(db_column='NumeroHermanos')
-    estado = models.CharField(db_column='Estado', max_length=10)
-    anioencurso = models.CharField(db_column='AnioEnCurso', max_length=20, null=True, blank=True)
-    tiposangre = models.CharField(db_column='TipoSangre', max_length=3)
-    alergia = models.CharField(db_column='Alergia', max_length=50, null=True, blank=True)
-    comentario = models.CharField(db_column='Comentario', max_length=100, null=True, blank=True)
-
-    class Meta:
-        managed = False
-        db_table = 'Participante.Catequizando'
-
-    def __str__(self):
-        return str(self.personaid)
-
-class NivelCatequesis(models.Model):
-    nivelcatequesisid = models.IntegerField(db_column='NivelCatequesisID', primary_key=True)
-    nombre = models.CharField(db_column='Nombre', max_length=50)
-    descripcion = models.CharField(db_column='Descripcion', max_length=200, null=True, blank=True)
-    libroasignado = models.CharField(db_column='LibroAsignado', max_length=50)
-    edadminima = models.IntegerField(db_column='EdadMinima')
-    sacramentoid = models.IntegerField(db_column='SacramentoID', null=True, blank=True)
-
-    class Meta:
-        managed = False
-        db_table = 'Catequesis.NivelCatequesis'
-
-    def __str__(self):
-        return str(self.nombre)
-
-class CicloCatequesis(models.Model):
-    cicloid = models.IntegerField(db_column='CicloID', primary_key=True)
-    nombreciclo = models.CharField(db_column='NombreCiclo', max_length=100)
-    fechainicio = models.DateField(db_column='FechaInicio')
-    fechafin = models.DateField(db_column='FechaFin')
-    estado = models.CharField(db_column='Estado', max_length=10)
-
-    class Meta:
-        managed = False
-        db_table = 'Catequesis.CicloCatequesis'
-
-    def __str__(self):
-        return str(self.nombreciclo)
-
-class Grupo(models.Model):
-    grupoid = models.IntegerField(db_column='GrupoID', primary_key=True)
-    nivelcatequesis = models.ForeignKey(NivelCatequesis, on_delete=models.DO_NOTHING, db_column='NivelCatequesisID')
-    ciclo = models.ForeignKey(CicloCatequesis, on_delete=models.DO_NOTHING, db_column='CicloID')
-    nombregrupo = models.CharField(db_column='NombreGrupo', max_length=50)
-    estado = models.CharField(db_column='Estado', max_length=10)
-
-    class Meta:
-        managed = False
-        db_table = 'Catequesis.Grupo'
-
-    def __str__(self):
-        return str(self.nombregrupo)
-
-class Sacramento(models.Model):
-    sacramentoid = models.IntegerField(db_column='SacramentoID', primary_key=True)
-    nombre = models.CharField(db_column='Nombre', max_length=25)
-
-    class Meta:
-        managed = False
-        db_table = 'Sacramento.Sacramento'
-
-    def __str__(self):
-        return str(self.nombre)
-
-class Certificado(models.Model):
-    certificadoid = models.IntegerField(db_column='CertificadoID', primary_key=True)
-    catequizando_personaid = models.IntegerField(db_column='Catequizando_PersonaID')
-    nivelcatequesisid = models.IntegerField(db_column='NivelCatequesisID')
-    parroco_personaid = models.IntegerField(db_column='Parroco_PersonaID')
-    numerocertificado = models.CharField(db_column='NumeroCertificado', unique=True, max_length=12)
-    fechaemision = models.DateField(db_column='FechaEmision')
-
-    class Meta:
-        managed = False
-        db_table = 'Sacramento.Certificado'
-
-    def __str__(self):
-        return f"Certificado {self.certificadoid}"
-
-class LogCertificadoEmision(models.Model):
-    logid = models.IntegerField(db_column='LogID', primary_key=True)
-    certificado = models.ForeignKey(
-        Certificado,
-        on_delete=models.DO_NOTHING,
-        db_column='CertificadoID'
+    # 1. MAPEO DEL _ID
+    # Tu esquema permite 'objectId' o 'string'. 
+    # Como migraste de SQL con IDs tipo "1", "2", usamos CharField como Primary Key.
+    id = models.CharField(
+        primary_key=True, 
+        max_length=50, 
+        db_column='_id' # Mapea al campo _id de Mongo
     )
-    catequizando_personaid = models.IntegerField(db_column='Catequizando_PersonaID')
-    fechaemision = models.DateTimeField(db_column='FechaEmision')
-    usuarioemite = models.CharField(db_column='UsuarioEmite', max_length=128, null=True, blank=True)
-    observacion = models.CharField(db_column='Observacion', max_length=200, null=True, blank=True)
 
-    class Meta:
-        managed = False
-        db_table = 'Sacramento.LogCertificadoEmision'
-
-    def __str__(self):
-        return f"Log {self.logid}"
-
-
-
-class Representante(models.Model):
-    personaid = models.OneToOneField(Persona, on_delete=models.DO_NOTHING, db_column='PersonaID', primary_key=True)
-    relacion = models.CharField(db_column='Relacion', max_length=25)
-    ocupacion = models.CharField(db_column='Ocupacion', max_length=50)
-
-    class Meta:
-        managed = False
-        db_table = 'Participante.Representante'
-
-    def __str__(self):
-        return str(self.personaid)
-
-
-class Padrino(models.Model):
-    personaid = models.OneToOneField(Persona, on_delete=models.DO_NOTHING, db_column='PersonaID', primary_key=True)
-    sacramentoid = models.ForeignKey(Sacramento, on_delete=models.DO_NOTHING, db_column='SacramentoID')
-
-    class Meta:
-        managed = False
-        db_table = 'Participante.Padrino'
-
-    def __str__(self):
-        return str(self.personaid)
-
-
-class CatequizandoRepresentante(models.Model):
-    # Composite PK (Representante_PersonaID, Catequizando_PersonaID)
-    representante_personaid = models.OneToOneField(Representante, on_delete=models.DO_NOTHING, db_column='Representante_PersonaID', primary_key=True)
-    catequizando_personaid = models.ForeignKey(Catequizando, on_delete=models.DO_NOTHING, db_column='Catequizando_PersonaID')
-
-    class Meta:
-        managed = False
-        db_table = 'Participante.CatequizandoRepresentante'
-        unique_together = (('representante_personaid', 'catequizando_personaid'),)
-
-
-class CatequizandoPadrino(models.Model):
-    # Composite PK (Padrino_PersonaID, Catequizando_PersonaID)
-    padrino_personaid = models.OneToOneField(Padrino, on_delete=models.DO_NOTHING, db_column='Padrino_PersonaID', primary_key=True)
-    catequizando_personaid = models.ForeignKey(Catequizando, on_delete=models.DO_NOTHING, db_column='Catequizando_PersonaID')
-
-    class Meta:
-        managed = False
-        db_table = 'Participante.CatequizandoPadrino'
-        unique_together = (('padrino_personaid', 'catequizando_personaid'),)
-
-
-class FeBautismo(models.Model):
-    febautismoid = models.IntegerField(db_column='FeBautismoID', primary_key=True)
-    catequizando_personaid = models.ForeignKey(Catequizando, on_delete=models.DO_NOTHING, db_column='Catequizando_PersonaID')
-    parroquia_parroquiaid = models.ForeignKey(Parroquia, on_delete=models.DO_NOTHING, db_column='Parroquia_ParroquiaID')
-    fechabautismo = models.DateField(db_column='FechaBautismo')
-    numerotomo = models.IntegerField(db_column='NumeroTomo', null=True, blank=True)
-    paginatomo = models.IntegerField(db_column='PaginaTomo', null=True, blank=True)
-
-    class Meta:
-        managed = False
-        db_table = 'Participante.FeBautismo'
+    # 2. CAMPOS PLANOS (Strings, Fechas, Enteros)
+    cedula = models.CharField(max_length=10)
+    primer_nombre = models.CharField(max_length=100)
+    segundo_nombre = models.CharField(max_length=100, null=True, blank=True)
+    primer_apellido = models.CharField(max_length=100)
+    segundo_apellido = models.CharField(max_length=100, null=True, blank=True)
     
-    def __str__(self):
-        return f"Fe Bautismo {self.febautismoid}"
-
-
-class Sesion(models.Model):
-    sesionid = models.IntegerField(db_column='SesionID', primary_key=True)
-    fecha = models.DateTimeField(db_column='Fecha')
-    grupoid = models.ForeignKey(Grupo, on_delete=models.DO_NOTHING, db_column='GrupoID')
-
-    class Meta:
-        managed = False
-        db_table = 'Catequesis.Sesion'
-
-    def __str__(self):
-        return f"Sesion {self.sesionid}"
-
-
-class Catequista(models.Model):
-    personaid = models.OneToOneField(Persona, on_delete=models.DO_NOTHING, db_column='PersonaID', primary_key=True)
-    tipocatequista = models.CharField(db_column='TipoCatequista', max_length=20)
-    estado = models.CharField(db_column='Estado', max_length=10)
-
-    class Meta:
-        managed = False
-        db_table = 'Catequesis.Catequista'
+    # Enum de Género
+    class Genero(models.TextChoices):
+        MASCULINO = 'M', 'Masculino'
+        FEMENINO = 'F', 'Femenino'
     
+    genero = models.CharField(
+        max_length=1, 
+        choices=Genero.choices
+    )
+
+    fecha_nacimiento = models.DateTimeField()
+    lugar_nacimiento = models.CharField(max_length=100, null=True, blank=True)
+    
+    numero_hijo = models.IntegerField(null=True, blank=True)
+    numero_hermanos = models.IntegerField(null=True, blank=True)
+    
+    telefono_casa = models.CharField(max_length=20, null=True, blank=True)
+    direccion = models.CharField(max_length=200)
+
+    # 3. CAMPOS ANIDADOS (Arrays y Objetos) -> Usamos JSONField
+    # Django guardará estos objetos tal cual, y Mongo validará su estructura con tu script.
+    
+    padres = models.JSONField(
+        default=list, 
+        help_text="Array de objetos con keys: relacion, nombres, apellidos, telefono, ocupacion"
+    )
+    
+    representante_legal = models.JSONField(
+        help_text="Objeto con keys: es_uno_de_los_padres, nombres, apellidos, telefono, correo"
+    )
+    
+    informacion_salud = models.JSONField(
+        help_text="Objeto con keys: tipo_sangre, contacto_emergencia, alergias, aspectos..."
+    )
+    
+    fe_bautismo = models.JSONField(
+        help_text="Objeto con keys: fecha, parroquia, ciudad, tomo, pagina..."
+    )
+    
+    sacramentos_realizados = models.JSONField(
+        default=list, 
+        blank=True,
+        help_text="Array de sacramentos previos"
+    )
+    
+    escolaridad = models.JSONField(
+        null=True, 
+        blank=True
+    )
+    
+    observaciones_generales = models.TextField(null=True, blank=True)
+
+    class Meta:
+        # managed = True (por defecto) para que Django sepa que esta colección es suya
+        db_table = 'catequizandos' # Nombre exacto de tu colección en Mongo
+        verbose_name = 'Catequizando'
+        verbose_name_plural = 'Catequizandos'
+
     def __str__(self):
-        return str(self.personaid)
+        return f"{self.cedula} - {self.primer_apellido} {self.primer_nombre}"
+    
 
+class Nivel(models.Model):
+    # 1. MAPEO DEL _ID
+    # Al igual que en catequizandos, permitimos Strings por la migración SQL
+    id = models.CharField(
+        primary_key=True, 
+        max_length=50, 
+        db_column='_id'
+    )
 
-class CatequistaGrupo(models.Model):
-    # Composite PK (GrupoID, Catequista_PersonaID)
-    grupoid = models.OneToOneField(Grupo, on_delete=models.DO_NOTHING, db_column='GrupoID', primary_key=True)
-    catequista_personaid = models.ForeignKey(Catequista, on_delete=models.DO_NOTHING, db_column='Catequista_PersonaID')
+    # 2. CAMPOS OBLIGATORIOS (Según tu array 'required')
+    nombre = models.CharField(max_length=100)
+    libro_asignado = models.CharField(max_length=200)
+    
+    # Edad con validadores espejo de tu esquema BSON (min: 5, max: 18)
+    edad_minima = models.IntegerField(
+        validators=[
+            MinValueValidator(5, message="La edad mínima no puede ser menor a 5"),
+            MaxValueValidator(18, message="La edad mínima no puede ser mayor a 18")
+        ]
+    )
 
-    class Meta:
-        managed = False
-        db_table = 'Catequesis.CatequistaGrupo'
-        unique_together = (('grupoid', 'catequista_personaid'),)
-
-
-class Asistencia(models.Model):
-    # Composite PK (Catequizando_PersonaID, SesionID)
-    catequizando_personaid = models.OneToOneField(Catequizando, on_delete=models.DO_NOTHING, db_column='Catequizando_PersonaID', primary_key=True)
-    sesionid = models.ForeignKey(Sesion, on_delete=models.DO_NOTHING, db_column='SesionID')
-    estapresente = models.BooleanField(db_column='EstaPresente')
-
-    class Meta:
-        managed = False
-        db_table = 'Catequesis.Asistencia'
-        unique_together = (('catequizando_personaid', 'sesionid'),)
-
-
-class Calificacion(models.Model):
-    calificacionid = models.IntegerField(db_column='CalificacionID', primary_key=True)
-    catequizando_personaid = models.ForeignKey(Catequizando, on_delete=models.DO_NOTHING, db_column='Catequizando_PersonaID')
-    tipocalificacion = models.CharField(db_column='TipoCalificacion', max_length=10)
-    grupoid = models.ForeignKey(Grupo, on_delete=models.DO_NOTHING, db_column='GrupoID')
-    valor = models.DecimalField(db_column='Valor', max_digits=4, decimal_places=2)
-    fecha = models.DateTimeField(db_column='Fecha')
+    # 3. CAMPOS OPCIONALES
+    descripcion = models.TextField(null=True, blank=True)
+    sacramento_asociado = models.CharField(max_length=100, null=True, blank=True)
 
     class Meta:
-        managed = False
-        db_table = 'Catequesis.Calificacion'
+        db_table = 'niveles' # Nombre exacto de la colección en Mongo
+        verbose_name = 'Nivel'
+        verbose_name_plural = 'Niveles'
 
     def __str__(self):
-        return f"Calificacion {self.calificacionid}"
+        return f"{self.nombre} (Min: {self.edad_minima} años)"    
+    
 
+class Ciclo(models.Model):
+    # 1. MAPEO DEL _ID
+    # Mantenemos CharField para compatibilidad con tus IDs migrados ("1", "2"...)
+    id = models.CharField(
+        primary_key=True, 
+        max_length=50, 
+        db_column='_id'
+    )
+
+    # 2. CAMPOS DE DATOS
+    nombre = models.CharField(max_length=100)
+    fecha_inicio = models.DateTimeField()
+    fecha_fin = models.DateTimeField()
+
+    # 3. ENUM PARA ESTADO
+    # Mapeo exacto de tu 'enum': ['ABIERTO', 'CERRADO', 'INSCRIPCIONES']
+    class Estado(models.TextChoices):
+        ABIERTO = 'ABIERTO', 'Abierto'
+        CERRADO = 'CERRADO', 'Cerrado'
+        INSCRIPCIONES = 'INSCRIPCIONES', 'Inscripciones'
+
+    estado = models.CharField(
+        max_length=20,
+        choices=Estado.choices,
+        default=Estado.INSCRIPCIONES
+    )
+
+    class Meta:
+        db_table = 'ciclos' # Nombre exacto de la colección en Mongo
+        verbose_name = 'Ciclo'
+        verbose_name_plural = 'Ciclos'
+
+    def __str__(self):
+        return self.nombre
+
+    # 4. VALIDACIÓN DE LOGICA DE NEGOCIO (Cross-field validation)
+    def clean(self):
+        # Validar que fecha_inicio < fecha_fin
+        if self.fecha_inicio and self.fecha_fin:
+            if self.fecha_inicio >= self.fecha_fin:
+                raise ValidationError({
+                    'fecha_fin': "La fecha de fin debe ser posterior a la fecha de inicio."
+                })
+        super().clean()
+
+    # Asegura que el validador corra al guardar desde el admin o formularios
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+        
+class Grupo(models.Model):
+    # 1. MAPEO DEL _ID
+    id = models.CharField(
+        primary_key=True, 
+        max_length=50, 
+        db_column='_id'
+    )
+
+    # 2. CAMPOS DIRECTOS
+    nombre_grupo = models.CharField(max_length=100)
+
+    # 3. RELACIONES (Foreign Keys)
+    # Apuntan a los modelos Ciclo y Nivel creados anteriormente.
+    # on_delete=models.PROTECT evita borrar un ciclo si tiene grupos activos.
+    ciclo = models.ForeignKey(
+        'Ciclo', 
+        on_delete=models.PROTECT, 
+        db_column='ciclo_id',
+        related_name='grupos'
+    )
+    
+    nivel = models.ForeignKey(
+        'Nivel', 
+        on_delete=models.PROTECT, 
+        db_column='nivel_id',
+        related_name='grupos'
+    )
+
+    # 4. ESTADO DEL GRUPO
+    class Estado(models.TextChoices):
+        ACTIVO = 'ACTIVO', 'Activo'
+        INACTIVO = 'INACTIVO', 'Inactivo'
+
+    estado = models.CharField(
+        max_length=20,
+        choices=Estado.choices,
+        default=Estado.ACTIVO
+    )
+
+    # 5. CAMPOS EMBEBIDOS (Arrays de objetos)
+    # Array de objetos { "nombre": "...", "tipo": "TITULAR|AUXILIAR" }
+    catequistas = models.JSONField(
+        default=list,
+        help_text="Lista de catequistas asignados. Keys: nombre, tipo"
+    )
+
+    # Array de objetos { "sesion_id": 1, "tema": "...", "fecha": "...", "asistencia_tomada": bool }
+    sesiones = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="Planificación de sesiones."
+    )
+
+    class Meta:
+        db_table = 'grupos' # Nombre exacto de la colección en Mongo
+        verbose_name = 'Grupo'
+        verbose_name_plural = 'Grupos'
+
+    def __str__(self):
+        return f"{self.nombre_grupo} - {self.ciclo}"
+    
 
 class Inscripcion(models.Model):
-    # Clave compuesta logicamente (Catequizando + Grupo).
-    # Usamos CatequizandoID como PK para Django, pero cambiamos a ForeignKey para evitar restriccion unique de OneToOne.
-    # Atencion: No usar save()/delete() ORM, solo lectura o SPs.
+    # 1. MAPEO DEL _ID (Autogenerado por Mongo)
+    id = ObjectIdAutoField(
+        primary_key=True,
+        db_column='_id'
+    )
+
+    # 2. RELACIONES (Foreign Keys)
+    # Apuntan a Catequizando y Grupo.
+    # Usamos db_column para que coincida con tu esquema ('catequizando_id', 'grupo_id')
+    catequizando = models.ForeignKey(
+        'Catequizando',
+        on_delete=models.CASCADE,
+        db_column='catequizando_id',
+        related_name='inscripciones'
+    )
     
-    catequizando_personaid = models.ForeignKey(Catequizando, on_delete=models.DO_NOTHING, db_column='Catequizando_PersonaID', primary_key=True)
-    grupo = models.ForeignKey(Grupo, on_delete=models.DO_NOTHING, db_column='GrupoID')
-    fechainscripcion = models.DateTimeField(db_column='FechaInscripcion')
-    estadoinscripcion = models.CharField(db_column='EstadoInscripcion', max_length=10)
-    estadopago = models.CharField(db_column='EstadoPago', max_length=10)
-    esexcepcion = models.BooleanField(db_column='EsExcepcion')
+    grupo = models.ForeignKey(
+        'Grupo',
+        on_delete=models.CASCADE,
+        db_column='grupo_id',
+        related_name='inscripciones'
+    )
+
+    fecha_inscripcion = models.DateTimeField()
+
+    # 3. ENUMS DE ESTADO
+    class EstadoInscripcion(models.TextChoices):
+        CURSANDO = 'CURSANDO', 'Cursando'
+        APROBADO = 'APROBADO', 'Aprobado'
+        REPROBADO = 'REPROBADO', 'Reprobado'
+        RETIRADO = 'RETIRADO', 'Retirado'
+
+    estado_inscripcion = models.CharField(
+        max_length=20,
+        choices=EstadoInscripcion.choices,
+        default=EstadoInscripcion.CURSANDO
+    )
+
+    class EstadoPago(models.TextChoices):
+        PENDIENTE = 'PENDIENTE', 'Pendiente'
+        PAGADO = 'PAGADO', 'Pagado'
+
+    estado_pago = models.CharField(
+        max_length=20,
+        choices=EstadoPago.choices,
+        default=EstadoPago.PENDIENTE
+    )
+
+    # 4. CAMPOS EMBEBIDOS (JSON)
+    
+    # Array de objetos { "descripcion": "...", "valor": 9.5, "fecha": "..." }
+    calificaciones = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="Historial de notas."
+    )
+
+    # Array de objetos { "sesion_id": 1, "estado": "PRESENTE|FALTA..." }
+    registro_asistencia = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="Registro de asistencia por sesión."
+    )
+
+    # Objeto { "numero_certificado": "...", "fecha_emision": "...", ... }
+    certificado_final = models.JSONField(
+        null=True,
+        blank=True,
+        help_text="Datos del certificado si aprobó."
+    )
 
     class Meta:
-        managed = False
-        db_table = 'Participante.Inscripcion'
-        unique_together = (('catequizando_personaid', 'grupo'),)
+        db_table = 'inscripciones'
+        verbose_name = 'Inscripción'
+        verbose_name_plural = 'Inscripciones'
+        
+        # Evitar que un alumno se inscriba dos veces en el mismo grupo
+        constraints = [
+            models.UniqueConstraint(
+                fields=['catequizando', 'grupo'], 
+                name='unique_inscripcion_alumno_grupo'
+            )
+        ]
 
     def __str__(self):
-        return f"{self.catequizando_personaid} - {self.grupo}"
+        return f"{self.catequizando} - {self.grupo}"

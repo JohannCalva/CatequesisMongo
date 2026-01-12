@@ -4,37 +4,64 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card shadow-sm">
-            <div class="card-header bg-warning text-white">
-                <h4 class="mb-0">Editar Inscripción</h4>
+    <div class="col-lg-8">
+
+        <div class="mb-3">
+            <a href="{% url 'inscripcion_detail' catequizando_id grupo_id %}"
+                class="text-decoration-none text-muted fw-bold">
+                <i class="bi bi-arrow-left me-1"></i> Cancelar y Volver
+            </a>
+        </div>
+
+        <div class="card shadow border-0 rounded-4 edit-card">
+            <div class="form-header">
+                <h3 class="fw-bold mb-1">Editar Estado de Inscripción</h3>
+                <p class="text-muted small mb-0">Gestionar matrícula y pagos</p>
             </div>
-            <div class="card-body">
-                <div class="mb-4">
-                    <h5>{{ item.catequizando_personaid.personaid.primernombre }} {{ item.catequizando_personaid.personaid.primerapellido }}</h5>
-                    <p class="text-muted mb-0">Grupo: {{ item.grupo.nombregrupo }}</p>
+
+            <div class="card-body p-4">
+
+                <div class="d-flex align-items-center mb-4 p-3 bg-light rounded border">
+                    <div class="avatar-initial me-3 bg-primary text-white">
+                        {{ item.catequizando.primer_nombre|slice:":1" }}
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-0 text-dark">{{ item.catequizando.primer_nombre }} {{ item.catequizando.primer_apellido }}</h5>
+                        <p class="text-muted small mb-0">Grupo Actual: <span class="fw-bold">{{ item.grupo.nombre_grupo }}</span></p>
+                    </div>
                 </div>
 
                 <form method="post">
                     {% csrf_token %}
 
-                    {% for field in form %}
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">{{ field.label }}</label>
-                        {{ field }}
-                        {% if field.help_text %}
-                        <div class="form-text">{{ field.help_text }}</div>
-                        {% endif %}
-                        {% for error in field.errors %}
-                        <div class="text-danger small">{{ error }}</div>
-                        {% endfor %}
-                    </div>
-                    {% endfor %}
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Estado Académico</label>
+                            {{ form.estadoinscripcion }}
+                            {% if form.estadoinscripcion.errors %}
+                            <div class="text-danger small mt-1">{{ form.estadoinscripcion.errors.0 }}</div>
+                            {% endif %}
+                        </div>
 
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Estado de Pago</label>
+                            {{ form.estadopago }}
+                            {% if form.estadopago.errors %}
+                            <div class="text-danger small mt-1">{{ form.estadopago.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="d-flex justify-content-end gap-2">
                         <a href="{% url 'inscripcion_detail' catequizando_id grupo_id %}"
-                            class="btn btn-secondary me-md-2">Cancelar</a>
-                        <button type="submit" class="btn btn-warning">Actualizar</button>
+                            class="btn btn-light border px-4 fw-bold">
+                            Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary px-4 fw-bold shadow-sm">
+                            <i class="bi bi-save me-2"></i>Guardar Cambios
+                        </button>
                     </div>
                 </form>
             </div>

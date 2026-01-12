@@ -1,36 +1,31 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import DetailView, FormView
 from django.urls import reverse
-from django.db import connection
 from django.views import View
-from .models import Catequizando, Grupo, Inscripcion, NivelCatequesis, CicloCatequesis
+from django.db import connection 
+from .models import Catequizando, Grupo, Inscripcion, Nivel, Ciclo
 from .forms import (
     CatequizandoUpdateMiniForm, 
     CatequizandoSPForm, 
     GrupoForm, 
     GrupoUpdateForm, 
     InscripcionCreateForm, 
-    InscripcionUpdateForm
+    InscripcionUpdateForm,
+    CicloForm,
+    CicloUpdateForm,
+    AsistenciaForm,
+    CalificacionForm
 )
-
 
 def home(request):
     return render(request, "home.html")
 
+# ==========================================
+# CATEQUIZANDOS
+# ==========================================
+
 def catequizando_listar(request):
-    with connection.cursor() as cursor:
-        cursor.execute("EXEC Participante.sp_ListarCatequizandos")
-
-        if cursor.description is None:
-            catequizandos = []
-        else:
-            columns = [col[0] for col in cursor.description]
-            rows = cursor.fetchall()
-            catequizandos = [
-                dict(zip(columns, row))
-                for row in rows
-            ]
-
+    catequizandos = Catequizando.objects.all()
     return render(request, "catequizandos/listar.html", {"catequizandos": catequizandos})
 
 
@@ -45,48 +40,36 @@ class CatequizandoUpdateView(View):
     form_class = CatequizandoUpdateMiniForm
 
     def get(self, request, pk):
-        cateq = Catequizando.objects.get(personaid_id=pk)
+        cateq = get_object_or_404(Catequizando, pk=pk)
 
         form = self.form_class(initial={
-            "telefono": cateq.personaid.telefono,
-            "correo": cateq.personaid.correo,
-            "estado": cateq.estado,
-            "anioencurso": cateq.anioencurso,
-            "tiposangre": cateq.tiposangre,
-            "alergia": cateq.alergia,
-            "comentario": cateq.comentario,
+            "telefono": cateq.telefono_casa,
+            "estado": "ACTIVO", 
+            "anioencurso": cateq.escolaridad.get('anio_en_curso', '') if cateq.escolaridad else '',
+            "tiposangre": cateq.informacion_salud.get('tipo_sangre', '') if cateq.informacion_salud else '',
+            "alergia": ", ".join(cateq.informacion_salud.get('alergias', [])) if cateq.informacion_salud else '',
+            "comentario": cateq.observaciones_generales,
         })
 
         return render(request, self.template_name, {"form": form, "pk": pk})
 
     def post(self, request, pk):
-        form = self.form_class(request.POST)
-
+        form = self.form_class(request.POST) 
         if form.is_valid():
+            cateq = get_object_or_404(Catequizando, pk=pk)
             data = form.cleaned_data
 
-            with connection.cursor() as cursor:
-                cursor.execute("""
-                    EXEC Participante.sp_ActualizarCatequizandoBasico
-                        @PersonaID=%s,
-                        @Correo=%s,
-                        @Telefono=%s,
-                        @Estado=%s,
-                        @AnioEnCurso=%s,
-                        @TipoSangre=%s,
-                        @Alergia=%s,
-                        @Comentario=%s
-                """, [
-                    pk,
-                    data["correo"],
-                    data["telefono"],
-                    data["estado"],
-                    data["anioencurso"],
-                    data["tiposangre"],
-                    data["alergia"],
-                    data["comentario"],
-                ])
+            cateq.telefono_casa = data["telefono"]
+            cateq.observaciones_generales = data["comentario"]
+            
+            if not cateq.escolaridad: cateq.escolaridad = {}
+            cateq.escolaridad['anio_en_curso'] = data['anioencurso']
+            
+            if not cateq.informacion_salud: cateq.informacion_salud = {}
+            cateq.informacion_salud['tipo_sangre'] = data['tiposangre']
+            cateq.informacion_salud['alergias'] = [data['alergia']] if data['alergia'] else []
 
+            cateq.save()
             return redirect("catequizando_detalle", pk=pk)
 
         return render(request, self.template_name, {"form": form, "pk": pk})
@@ -99,175 +82,168 @@ class CatequizandoCreateView(FormView):
     def form_valid(self, form):
         data = form.cleaned_data
 
-        # --- CORRECCIÓN DE FECHAS ---
-        # 1. Catequizando: Es obligatorio en el form, solo convertimos a string.
-        fecha_nacimiento_str = str(data["fechanacimiento"])
-
-        # 2. Padre: Si viene vacío o None, enviamos '1900-01-01' para evitar error de SQL (NOT NULL).
-        if data.get("fnacimientopadre"):
-            f_padre = str(data["fnacimientopadre"])
-        else:
-            f_padre = '1900-01-01'
-
-        # 3. Madre: Misma lógica de protección.
-        if data.get("fnacimientomadre"):
-            f_madre = str(data["fnacimientomadre"])
-        else:
-            f_madre = '1900-01-01'
+        padres = []
+        if data.get('cedulapadre') or data.get('pnombrepadre'):
+            padre = {
+                "relacion": "PADRE",
+                "nombres": f"{data.get('pnombrepadre', '')} {data.get('snombrepadre', '')}".strip(),
+                "apellidos": f"{data.get('papellidopadre', '')} {data.get('sapellidopadre', '')}".strip(),
+                "telefono": data.get('telefonopadre', ''),
+                "ocupacion": data.get('ocupacionpadre', '')
+            }
+            padres.append(padre)
         
-        # 4. Fe de Bautismo: Handling Nulls
-        parroquia_bautismo = data.get("parroquiabautismoid")
-        parroquia_bautismo_id = parroquia_bautismo.pk if parroquia_bautismo else None
-        
-        fecha_bautismo = data.get("fechabautismo")
-        fecha_bautismo_str = str(fecha_bautismo) if fecha_bautismo else None
+        if data.get('cedulamadre') or data.get('pnombremadre'):
+            madre = {
+                "relacion": "MADRE",
+                "nombres": f"{data.get('pnombremadre', '')} {data.get('snombremadre', '')}".strip(),
+                "apellidos": f"{data.get('papellidomadre', '')} {data.get('sapellidomadre', '')}".strip(),
+                "telefono": data.get('telefonomadre', ''),
+                "ocupacion": data.get('ocupacionmadre', '')
+            }
+            padres.append(madre)
 
-        # ----------------------------
+        rep_legal = {}
+        if padres:
+            p = padres[0] 
+            rep_legal = {
+                "es_uno_de_los_padres": True,
+                "nombres": p['nombres'],
+                "apellidos": p['apellidos'],
+                "telefono": p['telefono'],
+                "correo": data.get('correopadre') if p['relacion'] == 'PADRE' else data.get('correomadre', '')
+            }
+        else:
+             rep_legal = {
+                "es_uno_de_los_padres": False,
+                "nombres": "Desconocido",
+                "apellidos": "Desconocido",
+                "telefono": "",
+                "correo": ""
+             }
 
-        with connection.cursor() as cursor:
-            values = [
-                data["cedula"],
-                data["primernombre"],
-                data["segundonombre"], 
-                data["primerapellido"],
-                data["segundoapellido"],
-                fecha_nacimiento_str,
-                data["genero"],
-                data["telefono"],
-                data["correo"],
-                data["calleprincipal"],
-                data["callesecundaria"],
-                data["sector"],
-                data["parroquiaid"].pk, 
-                data["paisnacimiento"],
-                data["ciudadnacimiento"],
-                data["numerohijo"],
-                data["numerohermanos"],
-                data["estado"],
-                data["anioencurso"],
-                data["tiposangre"],
-                data["alergia"],
-                data["comentario"],
-                data["cedulapadre"],
-                data["pnombrepadre"],
-                data["snombrepadre"],
-                data["papellidopadre"],
-                data["sapellidopadre"],
-                f_padre,
-                data["telefonopadre"],
-                data["correopadre"],
-                data["ocupacionpadre"],
-                data["cedulamadre"],
-                data["pnombremadre"],
-                data["snombremadre"],
-                data["papellidomadre"],
-                data["sapellidomadre"],
-                f_madre,
-                data["telefonomadre"],
-                data["correomadre"],
-                data["ocupacionmadre"],
-                # Nuevos parametros Fe de Bautismo
-                parroquia_bautismo_id,
-                fecha_bautismo_str,
-                data.get("numerotomo"),
-                data.get("paginatomo")
-            ]
+        fe_bautismo = {
+            "fecha": str(data.get('fechabautismo')) if data.get('fechabautismo') else None,
+            "parroquia": data.get('parroquiabautismoid', ''),
+            "ciudad": "", 
+            "tomo": data.get('numerotomo'),
+            "pagina": data.get('paginatomo'),
+            "sacerdote": "",
+            "padrino": "",
+            "madrina": ""
+        }
 
-            cursor.execute("""
-                EXEC Participante.sp_InsertarCatequizando
-                    @Cedula=%s,
-                    @PrimerNombre=%s,
-                    @SegundoNombre=%s,
-                    @PrimerApellido=%s,
-                    @SegundoApellido=%s,
-                    @FechaNacimiento=%s,
-                    @Genero=%s,
-                    @Telefono=%s,
-                    @Correo=%s,
-                    @CallePrincipal=%s,
-                    @CalleSecundaria=%s,
-                    @Sector=%s,
-                    @ParroquiaID=%s,
-                    @PaisNacimiento=%s,
-                    @CiudadNacimiento=%s,
-                    @NumeroHijo=%s,
-                    @NumeroHermanos=%s,
-                    @Estado=%s,
-                    @AnioEnCurso=%s,
-                    @TipoSangre=%s,
-                    @Alergia=%s,
-                    @Comentario=%s,
-                    @CedulaPadre=%s,
-                    @PNombrePadre=%s,
-                    @SNombrePadre=%s,
-                    @PApellidoPadre=%s,
-                    @SApellidoPadre=%s,
-                    @FNacimientoPadre=%s,
-                    @TelefonoPadre=%s,
-                    @CorreoPadre=%s,
-                    @OcupacionPadre=%s,
-                    @CedulaMadre=%s,
-                    @PNombreMadre=%s,
-                    @SNombreMadre=%s,
-                    @PApellidoMadre=%s,
-                    @SApellidoMadre=%s,
-                    @FNacimientoMadre=%s,
-                    @TelefonoMadre=%s,
-                    @CorreoMadre=%s,
-                    @OcupacionMadre=%s,
-                    @ParroquiaBautismoID=%s,
-                    @FechaBautismo=%s,
-                    @NumeroTomo=%s,
-                    @PaginaTomo=%s
-            """, values)
+        info_salud = {
+            "tipo_sangre": data.get('tiposangre'),
+            "contacto_emergencia": "", 
+            "alergias": [data.get('alergia')] if data.get('alergia') else [],
+            "aspectos_a_considerar": ""
+        }
+
+        escolaridad = {
+            "escuela_colegio": "",
+            "anio_en_curso": data.get('anioencurso')
+        }
+
+        Catequizando.objects.create(
+            id=data['cedula'], 
+            cedula=data['cedula'],
+            primer_nombre=data['primernombre'],
+            segundo_nombre=data['segundonombre'],
+            primer_apellido=data['primerapellido'],
+            segundo_apellido=data['segundoapellido'],
+            genero=data['genero'],
+            fecha_nacimiento=data['fechanacimiento'],
+            lugar_nacimiento=f"{data['ciudadnacimiento']}, {data['paisnacimiento']}",
+            numero_hijo=data['numerohijo'],
+            numero_hermanos=data['numerohermanos'],
+            telefono_casa=data['telefono'],
+            direccion=f"{data['calleprincipal']} y {data['callesecundaria']}, {data['sector']}",
+            
+            padres=padres,
+            representante_legal=rep_legal,
+            informacion_salud=info_salud,
+            fe_bautismo=fe_bautismo,
+            escolaridad=escolaridad,
+            observaciones_generales=data['comentario']
+        )
 
         return redirect("catequizando_listar")
 
 
 def catequizando_eliminar(request, persona_id):
-    with connection.cursor() as cursor:
-        cursor.execute("""
-            EXEC Participante.sp_EliminarCatequizando @PersonaID=%s
-        """, [persona_id])
-
+    cateq = get_object_or_404(Catequizando, pk=persona_id)
+    cateq.delete()
     return redirect("catequizando_listar")
 
 def catequizando_buscar(request):
-    cedula = request.GET.get("cedula") or None
-    apellido = request.GET.get("apellido") or None
-    estado = request.GET.get("estado") or None
+    cedula = request.GET.get("cedula")
+    apellido = request.GET.get("apellido")
 
-    with connection.cursor() as cursor:
-        cursor.execute("""
-            EXEC Participante.sp_BuscarCatequizandos
-                @Cedula=%s,
-                @PrimerApellido=%s,
-                @Estado=%s
-        """, [cedula, apellido, estado])
-
-        if cursor.description is None:
-            catequizandos = []
-        else:
-            columns = [col[0] for col in cursor.description]
-            rows = cursor.fetchall()
-            catequizandos = [dict(zip(columns, row)) for row in rows]
-
+    qs = Catequizando.objects.all()
+    if cedula:
+        qs = qs.filter(cedula__icontains=cedula)
+    if apellido:
+        qs = qs.filter(primer_apellido__icontains=apellido)
+    
     return render(request, "catequizandos/listar.html", {
-        "catequizandos": catequizandos,
-        "filtro_cedula": request.GET.get("cedula", ""),
-        "filtro_apellido": request.GET.get("apellido", ""),
-        "filtro_estado": request.GET.get("estado", ""),
+        "catequizandos": qs,
+        "filtro_cedula": cedula or "",
+        "filtro_apellido": apellido or "",
     })
 
 # ==========================================
-# VISTAS GRUPOS (CRUD con SP)
+# GRUPOS
 # ==========================================
 
-# ==========================================
-# VISTAS GRUPOS (CRUD con SP)
-# ==========================================
+def grupo_listar(request):
+    grupos = Grupo.objects.all()
+    niveles = Nivel.objects.all()
+    ciclos = Ciclo.objects.all().order_by('-fecha_inicio')
+    
+    return render(request, "grupos/listar.html", {
+        "grupos": grupos,
+        "niveles": niveles,
+        "ciclos": ciclos,
+    })
 
-# grupo_listar se ha fusionado con la logica de busqueda abajo
+def grupo_buscar(request):
+    nombre = request.GET.get('nombre')
+    nivel_id = request.GET.get('nivel_id')
+    ciclo_id = request.GET.get('ciclo_id')
+    
+    # Extra filters requested
+    catequista = request.GET.get('catequista')
+
+    qs = Grupo.objects.all()
+    if nombre:
+        qs = qs.filter(nombre_grupo__icontains=nombre)
+    if nivel_id:
+        qs = qs.filter(nivel__id=nivel_id)
+    if ciclo_id:
+        qs = qs.filter(ciclo__id=ciclo_id)
+    
+    # Filter by Catequista Name (partial match logic in Python for now if not supported directly in complex list lookup)
+    # db.grupos.find({ "catequistas.nombre": ... })
+    if catequista:
+        # Fetching all matches for other filters first to minimize dataset
+        # Then filtering in memory since 'catequistas' is a list of dicts.
+        current_qs = list(qs)
+        qs = [g for g in current_qs if any(c.get('nombre', '').lower().find(catequista.lower()) != -1 for c in g.catequistas)]
+
+        
+    niveles = Nivel.objects.all()
+    ciclos = Ciclo.objects.all().order_by('-fecha_inicio')
+
+    return render(request, "grupos/listar.html", {
+        "grupos": qs,
+        "niveles": niveles,
+        "ciclos": ciclos,
+        "filtro_nombre": nombre or "",
+        "filtro_nivel": nivel_id or "",
+        "filtro_ciclo": ciclo_id or "",
+        "filtro_catequista": catequista or "" 
+    })
 
 class GrupoCreateView(FormView):
     template_name = "grupos/crear.html"
@@ -275,19 +251,16 @@ class GrupoCreateView(FormView):
 
     def form_valid(self, form):
         data = form.cleaned_data
-        with connection.cursor() as cursor:
-            cursor.execute("""
-                EXEC Catequesis.sp_InsertarGrupo
-                    @NivelCatequesisID=%s,
-                    @CicloID=%s,
-                    @NombreGrupo=%s,
-                    @Estado=%s
-            """, [
-                data['nivelcatequesis'].pk,
-                data['ciclo'].pk,
-                data['nombregrupo'],
-                data['estado']
-            ])
+        import uuid
+        new_id = str(uuid.uuid4())[:8] 
+
+        Grupo.objects.create(
+            id=new_id,
+            nombre_grupo=data['nombregrupo'],
+            ciclo=data['ciclo'],
+            nivel=data['nivelcatequesis'], 
+            estado=data['estado']
+        )
         return redirect('grupo_listar')
 
 class GrupoDetailView(DetailView):
@@ -300,11 +273,9 @@ class GrupoUpdateView(View):
     form_class = GrupoUpdateForm
 
     def get(self, request, pk):
-        # Intentamos obtener el grupo via ORM para llenar el form
-        # O podríamos usar el SP de BuscarGrupo filtrando por nombre/id si tuvieramos uno específico de ID
-        grupo = Grupo.objects.get(pk=pk)
+        grupo = get_object_or_404(Grupo, pk=pk)
         form = self.form_class(initial={
-            'nombregrupo': grupo.nombregrupo,
+            'nombregrupo': grupo.nombre_grupo,
             'estado': grupo.estado
         })
         return render(request, self.template_name, {'form': form, 'grupo': grupo})
@@ -312,123 +283,51 @@ class GrupoUpdateView(View):
     def post(self, request, pk):
         form = self.form_class(request.POST)
         if form.is_valid():
+            grupo = get_object_or_404(Grupo, pk=pk)
             data = form.cleaned_data
-            with connection.cursor() as cursor:
-                cursor.execute("""
-                    EXEC Catequesis.sp_ActualizarGrupo
-                        @GrupoID=%s,
-                        @NombreGrupo=%s,
-                        @Estado=%s
-                """, [pk, data['nombregrupo'], data['estado']])
+            grupo.nombre_grupo = data['nombregrupo']
+            grupo.estado = data['estado']
+            grupo.save()
             return redirect('grupo_detail', pk=pk)
         return render(request, self.template_name, {'form': form, 'pk': pk})
 
 def grupo_eliminar(request, pk):
-    with connection.cursor() as cursor:
-        cursor.execute("EXEC Catequesis.sp_EliminarGrupo @GrupoID=%s", [pk])
+    grupo = get_object_or_404(Grupo, pk=pk)
+    grupo.delete()
     return redirect('grupo_listar')
 
 
-def grupo_listar(request):
-    with connection.cursor() as cursor:
-        cursor.execute("EXEC Catequesis.sp_ListarGrupos")
-
-        if cursor.description is None:
-            grupos = []
-        else:
-            columns = [col[0] for col in cursor.description]
-            grupos = [dict(zip(columns, row)) for row in cursor.fetchall()]
-
-    niveles = NivelCatequesis.objects.all()
-    ciclos = CicloCatequesis.objects.all().order_by('-fechainicio')
-
-    return render(request, "grupos/listar.html", {
-        "grupos": grupos,
-        "niveles": niveles,
-        "ciclos": ciclos,
-        "filtro_nombre": "",
-        "filtro_nivel": "",
-        "filtro_ciclo": "",
-    })
-
-
-def grupo_buscar(request):
-    nombre = request.GET.get('nombre', '')
-    nivel_id = request.GET.get('nivel_id') or None
-    ciclo_id = request.GET.get('ciclo_id') or None
-
-    with connection.cursor() as cursor:
-        cursor.execute("""
-            EXEC Catequesis.sp_BuscarGrupo 
-                @NombreGrupo=%s, 
-                @NivelID=%s, 
-                @CicloID=%s
-        """, [nombre if nombre else None, nivel_id, ciclo_id])
-        
-        if cursor.description is None:
-            grupos = []
-        else:
-            columns = [col[0] for col in cursor.description]
-            grupos = [dict(zip(columns, row)) for row in cursor.fetchall()]
-
-    niveles = NivelCatequesis.objects.all()
-    ciclos = CicloCatequesis.objects.all().order_by('-fechainicio')
-
-    return render(request, "grupos/listar.html", {
-        "grupos": grupos,
-        "niveles": niveles,
-        "ciclos": ciclos,
-        "filtro_nombre": nombre,
-        "filtro_nivel": int(nivel_id) if nivel_id else "",
-        "filtro_ciclo": int(ciclo_id) if ciclo_id else ""
-    })
-
 # ==========================================
-# VISTAS INSCRIPCIONES (CRUD con SP)
+# INSCRIPCIONES
 # ==========================================
 
 def inscripcion_listar(request):
-    with connection.cursor() as cursor:
-        cursor.execute("EXEC Participante.sp_ListarInscripciones")
-
-        if cursor.description is None:
-            inscripciones = []
-        else:
-            columns = [col[0] for col in cursor.description]
-            inscripciones = [dict(zip(columns, row)) for row in cursor.fetchall()]
-
+    inscripciones = Inscripcion.objects.all()
     return render(request, "inscripciones/listar.html", {
         "inscripciones": inscripciones,
-        "grupos": Grupo.objects.all(),
-        "filtro_cedula": "",
-        "filtro_grupo_id": ""
+        "grupos": Grupo.objects.all()
     })
-
 
 def inscripcion_buscar(request):
-    cedula = request.GET.get('cedula') or None
-    grupo_id = request.GET.get('grupo_id') or None
+    cedula = request.GET.get('cedula')
+    grupo_id = request.GET.get('grupo_id')
+    estado_pago = request.GET.get('estado_pago')
 
-    inscripciones = []
-
-    with connection.cursor() as cursor:
-        cursor.execute("""
-            EXEC Participante.sp_BuscarInscripciones
-                @Cedula=%s,
-                @GrupoID=%s
-        """, [cedula, grupo_id])
-
-        if cursor.description:
-            columns = [col[0] for col in cursor.description]
-            inscripciones = [dict(zip(columns, row)) for row in cursor.fetchall()]
+    qs = Inscripcion.objects.all()
+    if cedula:
+        qs = qs.filter(catequizando__cedula__icontains=cedula)
+    if grupo_id:
+        qs = qs.filter(grupo__id=grupo_id)
+    if estado_pago:
+        qs = qs.filter(estado_pago=estado_pago)
 
     return render(request, "inscripciones/listar.html", {
-        "inscripciones": inscripciones,
+        "inscripciones": qs,
         "grupos": Grupo.objects.all(),
         "filtro_cedula": cedula or "",
-        "filtro_grupo_id": int(grupo_id) if grupo_id else ""
+        "filtro_grupo_id": grupo_id or "",
+        "filtro_pago": estado_pago or ""
     })
-
 
 class InscripcionCreateView(FormView):
     template_name = "inscripciones/crear.html"
@@ -436,111 +335,139 @@ class InscripcionCreateView(FormView):
 
     def form_valid(self, form):
         data = form.cleaned_data
-        with connection.cursor() as cursor:
-            # Note: The SP might raise an error if already enrolled.
-            # We should probably handle try/catch or assume SP handles it gracefully (based on SP definition provided).
-            # The SP has PRINT '...' which Django might not capture easily as error without raising exception.
-            # However, PyODBC/Django usually doesn't raise exception for PRINTs.
-            # We rely on SP validation logic.
-            
-            cursor.execute("""
-                EXEC Participante.sp_InsertarInscripcion
-                    @CatequizandoID=%s,
-                    @GrupoID=%s,
-                    @EstadoPago=%s,
-                    @EsExcepcion=%s
-            """, [
-                data['catequizando'].pk,
-                data['grupo'].pk,
-                data['estadopago'],
-                data['esexcepcion']
-            ])
+        
+        count = Inscripcion.objects.filter(catequizando=data['catequizando'], grupo=data['grupo']).count()
+        if count > 0:
+            return redirect('inscripcion_listar') 
+
+        import datetime
+        Inscripcion.objects.create(
+            catequizando=data['catequizando'],
+            grupo=data['grupo'],
+            estado_pago=data['estadopago'],
+            fecha_inscripcion=datetime.datetime.now().strftime("%Y-%m-%d"),
+            estado_inscripcion='CURSANDO'
+        )
         return redirect('inscripcion_listar')
 
 class InscripcionDetailView(DetailView):
-    # This is tricky because it has a composite PK.
-    # We can't easily use standard DetailView.get_object.
-    # We will override get_object to fetch by (catequizando_id, grupo_id).
     model = Inscripcion
     template_name = "inscripciones/detalle.html"
     context_object_name = "inscripcion"
-
+    
     def get_object(self, queryset=None):
         c_id = self.kwargs.get('catequizando_id')
         g_id = self.kwargs.get('grupo_id')
-        return Inscripcion.objects.get(catequizando_personaid=c_id, grupo=g_id)
+        return get_object_or_404(Inscripcion, catequizando__id=c_id, grupo__id=g_id)
 
 class InscripcionUpdateView(View):
     template_name = "inscripciones/editar.html"
     form_class = InscripcionUpdateForm
 
     def get(self, request, catequizando_id, grupo_id):
-        inscripcion = Inscripcion.objects.get(catequizando_personaid=catequizando_id, grupo=grupo_id)
+        inscripcion = get_object_or_404(Inscripcion, catequizando__id=catequizando_id, grupo__id=grupo_id)
         form = self.form_class(initial={
-            'estadoinscripcion': inscripcion.estadoinscripcion,
-            'estadopago': inscripcion.estadopago,
-            'esexcepcion': inscripcion.esexcepcion
+            'estadoinscripcion': inscripcion.estado_inscripcion,
+            'estadopago': inscripcion.estado_pago,
         })
         return render(request, self.template_name, {
             'form': form, 
             'catequizando_id': catequizando_id, 
             'grupo_id': grupo_id,
-            'item': inscripcion # To show details like name in template
+            'item': inscripcion
         })
 
     def post(self, request, catequizando_id, grupo_id):
+        inscripcion = get_object_or_404(Inscripcion, catequizando__id=catequizando_id, grupo__id=grupo_id)
         form = self.form_class(request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            with connection.cursor() as cursor:
-                cursor.execute("""
-                    EXEC Participante.sp_ActualizarInscripcion
-                        @CatequizandoID=%s,
-                        @GrupoID=%s,
-                        @EstadoInscripcion=%s,
-                        @EstadoPago=%s,
-                        @EsExcepcion=%s
-                """, [
-                    catequizando_id, 
-                    grupo_id, 
-                    data['estadoinscripcion'], 
-                    data['estadopago'], 
-                    data['esexcepcion']
-                ])
+            inscripcion.estado_inscripcion = data['estadoinscripcion']
+            inscripcion.estado_pago = data['estadopago']
+            inscripcion.save()
             return redirect('inscripcion_detail', catequizando_id=catequizando_id, grupo_id=grupo_id)
         return render(request, self.template_name, {'form': form, 'catequizando_id': catequizando_id, 'grupo_id': grupo_id})
 
 def inscripcion_eliminar(request, catequizando_id, grupo_id):
-    with connection.cursor() as cursor:
-        cursor.execute("""
-            EXEC Participante.sp_EliminarInscripcion 
-                @CatequizandoID=%s, 
-                @GrupoID=%s
-        """, [catequizando_id, grupo_id])
+    inscripcion = get_object_or_404(Inscripcion, catequizando__id=catequizando_id, grupo__id=grupo_id)
+    inscripcion.delete()
     return redirect('inscripcion_listar')
 
 
+# NEW VIEWS FOR SPECIFIC REQUESTS
+
+class InscripcionTomarAsistenciaView(View):
+    template_name = "inscripciones/asistencia.html"
+    form_class = AsistenciaForm
+
+    def get(self, request, catequizando_id, grupo_id):
+        inscripcion = get_object_or_404(Inscripcion, catequizando__id=catequizando_id, grupo__id=grupo_id)
+        form = self.form_class()
+        return render(request, self.template_name, {
+            'form': form, 'inscripcion': inscripcion
+        })
+
+    def post(self, request, catequizando_id, grupo_id):
+        inscripcion = get_object_or_404(Inscripcion, catequizando__id=catequizando_id, grupo__id=grupo_id)
+        form = self.form_class(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            # $push operation simulation
+            nuevo_registro = {
+                "sesion_id": data['sesion_id'],
+                "estado": data['estado']
+            }
+            if not inscripcion.registro_asistencia:
+                inscripcion.registro_asistencia = []
+            
+            inscripcion.registro_asistencia.append(nuevo_registro)
+            inscripcion.save()
+            return redirect('inscripcion_detail', catequizando_id=catequizando_id, grupo_id=grupo_id)
+        return render(request, self.template_name, {'form': form, 'inscripcion': inscripcion})
+
+
+class InscripcionAgregarNotaView(View):
+    template_name = "inscripciones/calificacion.html"
+    form_class = CalificacionForm
+
+    def get(self, request, catequizando_id, grupo_id):
+        inscripcion = get_object_or_404(Inscripcion, catequizando__id=catequizando_id, grupo__id=grupo_id)
+        form = self.form_class()
+        return render(request, self.template_name, {
+            'form': form, 'inscripcion': inscripcion
+        })
+
+    def post(self, request, catequizando_id, grupo_id):
+        inscripcion = get_object_or_404(Inscripcion, catequizando__id=catequizando_id, grupo__id=grupo_id)
+        form = self.form_class(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            import datetime
+            # $push operation simulation
+            nueva_nota = {
+                "descripcion": data['descripcion'],
+                "valor": data['valor'],
+                "fecha": str(datetime.date.today())
+            }
+            if not inscripcion.calificaciones:
+                inscripcion.calificaciones = []
+            
+            inscripcion.calificaciones.append(nueva_nota)
+            inscripcion.save()
+            return redirect('inscripcion_detail', catequizando_id=catequizando_id, grupo_id=grupo_id)
+        return render(request, self.template_name, {'form': form, 'inscripcion': inscripcion})
 
 
 # ==========================================
-# VISTAS CICLOS (CRUD con SP)
+# CICLOS
 # ==========================================
-
-from .forms import CicloForm, CicloUpdateForm
 
 def ciclo_listar(request):
-    with connection.cursor() as cursor:
-        cursor.execute("EXEC Catequesis.sp_ListarCiclos")
-        if cursor.description is None:
-            ciclos = []
-        else:
-            columns = [col[0] for col in cursor.description]
-            ciclos = [dict(zip(columns, row)) for row in cursor.fetchall()]
-    
+    ciclos = Ciclo.objects.all()
     return render(request, "ciclos/listar.html", {"ciclos": ciclos})
 
 class CicloDetailView(DetailView):
-    model = CicloCatequesis
+    model = Ciclo
     template_name = "ciclos/detalle.html"
     context_object_name = "ciclo"
 
@@ -550,19 +477,16 @@ class CicloCreateView(FormView):
 
     def form_valid(self, form):
         data = form.cleaned_data
-        with connection.cursor() as cursor:
-            cursor.execute("""
-                EXEC Catequesis.sp_InsertarCiclo
-                    @NombreCiclo=%s,
-                    @FechaInicio=%s,
-                    @FechaFin=%s,
-                    @Estado=%s
-            """, [
-                data['nombreciclo'],
-                str(data['fechainicio']),
-                str(data['fechafin']),
-                data['estado']
-            ])
+        import uuid
+        new_id = str(uuid.uuid4())[:8]
+
+        Ciclo.objects.create(
+            id=new_id,
+            nombre=data['nombreciclo'],
+            fecha_inicio=data['fechainicio'],
+            fecha_fin=data['fechafin'],
+            estado=data['estado']
+        )
         return redirect('ciclo_listar')
 
 class CicloUpdateView(View):
@@ -570,41 +494,29 @@ class CicloUpdateView(View):
     form_class = CicloUpdateForm
 
     def get(self, request, pk):
-        try:
-            ciclo = CicloCatequesis.objects.get(pk=pk)
-            form = self.form_class(initial={
-                'nombreciclo': ciclo.nombreciclo,
-                'fechainicio': ciclo.fechainicio,
-                'fechafin': ciclo.fechafin,
-                'estado': ciclo.estado
-            })
-            return render(request, self.template_name, {'form': form, 'ciclo': ciclo})
-        except CicloCatequesis.DoesNotExist:
-             return redirect('ciclo_listar')
+        ciclo = get_object_or_404(Ciclo, pk=pk)
+        form = self.form_class(initial={
+            'nombreciclo': ciclo.nombre,
+            'fechainicio': ciclo.fecha_inicio,
+            'fechafin': ciclo.fecha_fin,
+            'estado': ciclo.estado
+        })
+        return render(request, self.template_name, {'form': form, 'ciclo': ciclo})
 
     def post(self, request, pk):
         form = self.form_class(request.POST)
         if form.is_valid():
+            ciclo = get_object_or_404(Ciclo, pk=pk)
             data = form.cleaned_data
-            with connection.cursor() as cursor:
-                cursor.execute("""
-                    EXEC Catequesis.sp_ActualizarCiclo
-                        @CicloID=%s,
-                        @NombreCiclo=%s,
-                        @FechaInicio=%s,
-                        @FechaFin=%s,
-                        @Estado=%s
-                """, [
-                    pk,
-                    data['nombreciclo'],
-                    str(data['fechainicio']),
-                    str(data['fechafin']),
-                    data['estado']
-                ])
+            ciclo.nombre = data['nombreciclo']
+            ciclo.fecha_inicio = data['fechainicio']
+            ciclo.fecha_fin = data['fechafin']
+            ciclo.estado = data['estado']
+            ciclo.save()
             return redirect('ciclo_listar')
         return render(request, self.template_name, {'form': form, 'pk': pk})
 
 def ciclo_eliminar(request, pk):
-    with connection.cursor() as cursor:
-        cursor.execute("EXEC Catequesis.sp_EliminarCiclo @CicloID=%s", [pk])
+    ciclo = get_object_or_404(Ciclo, pk=pk)
+    ciclo.delete()
     return redirect('ciclo_listar')

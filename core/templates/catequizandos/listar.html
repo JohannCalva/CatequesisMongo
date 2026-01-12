@@ -1,54 +1,53 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 
-{% block title %}Listado de Catequizandos{% endblock %}
+{% block title %}Gestión de Catequizandos{% endblock %}
 
 {% block content %}
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h2 class="fw-bold mb-0 text-dark">Catequizandos</h2>
-        <p class="text-muted small mb-0">Gestión de alumnos inscritos en el ciclo actual.</p>
+        <p class="text-muted small mb-0">Directorio de estudiantes registrados.</p>
     </div>
     <a href="{% url 'catequizando_crear' %}" class="btn btn-primary shadow-sm px-4 rounded-pill">
-        <i class="bi bi-plus-lg me-1"></i> Nuevo Registro
+        <i class="bi bi-person-plus me-1"></i> Nuevo Catequizando
     </a>
 </div>
 
-<form method="GET" action="{% url 'catequizando_buscar' %}" class="row g-3 mb-4">
+<!-- Buscador -->
+<div class="card mb-4 border-0 shadow-sm">
+    <div class="card-body">
+        <form method="get" action="{% url 'catequizando_buscar' %}" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label text-muted small text-uppercase fw-bold">Cédula</label>
+                <input type="text" name="cedula" class="form-control" placeholder="Número de identificación..."
+                    value="{{ filtro_cedula }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label text-muted small text-uppercase fw-bold">Apellido</label>
+                <input type="text" name="apellido" class="form-control" placeholder="Primer apellido..."
+                    value="{{ filtro_apellido }}">
+            </div>
 
-    <div class="col-md-3">
-        <label class="form-label">Cédula</label>
-        <input type="text" name="cedula" class="form-control" value="{{ filtro_cedula }}">
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Buscar
+                </button>
+            </div>
+        </form>
     </div>
+</div>
 
-    <div class="col-md-3">
-        <label class="form-label">Primer Apellido</label>
-        <input type="text" name="apellido" class="form-control" value="{{ filtro_apellido }}">
-    </div>
-
-    <div class="col-md-3">
-        <label class="form-label">Estado</label>
-        <select class="form-select" name="estado">
-            <option value="">Todos</option>
-            <option value="Activo" {% if filtro_estado == "Activo" %}selected{% endif %}>Activo</option>
-            <option value="Inactivo" {% if filtro_estado == "Inactivo" %}selected{% endif %}>Inactivo</option>
-        </select>
-    </div>
-
-    <div class="col-md-3 d-flex align-items-end">
-        <button class="btn btn-primary w-100">Buscar</button>
-    </div>
-</form>
-
+<!-- Tabla -->
 <div class="card table-card">
     <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover mb-0">
+            <table class="table table-hover mb-0 align-middle">
                 <thead>
                     <tr>
-                        <th class="ps-4">Nombre Completo</th> <th>Cédula</th>
-                        <th>Año / Nivel</th>
-                        <th>Estado</th>
+                        <th class="ps-4">Catequizando</th>
+                        <th>Identificación</th>
+                        <th>Año Escolar</th>
                         <th class="text-end pe-4">Acciones</th>
                     </tr>
                 </thead>
@@ -58,50 +57,35 @@
                         <td class="ps-4">
                             <div class="d-flex align-items-center">
                                 <div class="avatar-initial">
-                                    {{ c.NombreCompleto|slice:":1" }}
+                                    {{ c.primer_nombre|slice:":1" }}
                                 </div>
-                                <div class="fw-bold text-dark">
-                                    {{ c.NombreCompleto }}
+                                <div>
+                                    <div class="fw-bold text-dark">{{ c.primer_nombre }} {{ c.primer_apellido }}</div>
+                                    <div class="small text-muted">{{ c.lugar_nacimiento|default:"--" }}</div>
                                 </div>
                             </div>
                         </td>
-
-                        <td class="font-monospace text-muted">{{ c.Cedula }}</td>
-
+                        <td class="font-monospace text-muted">{{ c.cedula }}</td>
                         <td>
-                            <span class="d-block fw-medium">{{ c.AnioEnCurso }}</span>
+                            <span
+                                class="badge bg-light text-dark border border-secondary border-opacity-25 rounded-pill px-3">
+                                {{ c.escolaridad.anio_en_curso|default:"-" }}
+                            </span>
                         </td>
-
-                        <td>
-                            {% if c.Estado == 'Activo' or c.Estado == True %}
-                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">
-                                    <i class="bi bi-check-circle-fill me-1"></i> Activo
-                                </span>
-                            {% else %}
-                                <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-3">
-                                    Inactivo
-                                </span>
-                            {% endif %}
-                        </td>
-
                         <td class="text-end pe-4">
                             <div class="d-inline-flex gap-1">
-                                <a href="{% url 'catequizando_detalle' c.PersonaID %}" 
-                                   class="btn btn-action btn-outline-info" 
-                                   title="Ver Detalle" data-bs-toggle="tooltip">
+                                <a href="{% url 'catequizando_detalle' c.id %}" class="btn btn-action btn-outline-info"
+                                    title="Ver Perfil" data-bs-toggle="tooltip">
                                     <i class="bi bi-eye"></i>
                                 </a>
-
-                                <a href="{% url 'catequizando_editar' c.PersonaID %}" 
-                                   class="btn btn-action btn-outline-warning" 
-                                   title="Editar" data-bs-toggle="tooltip">
+                                <a href="{% url 'catequizando_editar' c.id %}"
+                                    class="btn btn-action btn-outline-warning" title="Editar" data-bs-toggle="tooltip">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-
-                                <a href="{% url 'catequizando_eliminar' c.PersonaID %}" 
-                                   class="btn btn-action btn-outline-danger" 
-                                   title="Eliminar"
-                                   onclick="return confirm('¿Está seguro de que desea marcar a {{ c.NombreCompleto }} como Inactivo?');">
+                                <a href="{% url 'catequizando_eliminar' c.id %}"
+                                    class="btn btn-action btn-outline-danger"
+                                    onclick="return confirm('¿Está seguro de eliminar a {{ c.primer_nombre }} {{ c.primer_apellido }}?');"
+                                    title="Eliminar" data-bs-toggle="tooltip">
                                     <i class="bi bi-trash"></i>
                                 </a>
                             </div>
@@ -109,11 +93,10 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="5" class="text-center py-5">
+                        <td colspan="4" class="text-center py-5">
                             <div class="py-4">
                                 <i class="bi bi-people text-muted display-4 opacity-50"></i>
-                                <h5 class="mt-3 text-muted fw-normal">No hay catequizandos registrados</h5>
-                                <p class="text-muted small mb-0">Comienza agregando uno nuevo con el botón superior.</p>
+                                <h5 class="mt-3 text-muted fw-normal">No se encontraron registros</h5>
                             </div>
                         </td>
                     </tr>
@@ -123,15 +106,13 @@
         </div>
     </div>
 </div>
-
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // Inicializar Tooltips de Bootstrap (para que aparezcan los cartelitos al pasar el mouse por los botones)
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-      return new bootstrap.Tooltip(tooltipTriggerEl)
+        return new bootstrap.Tooltip(tooltipTriggerEl)
     })
 </script>
 {% endblock %}

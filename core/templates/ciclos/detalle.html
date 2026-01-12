@@ -1,44 +1,85 @@
 {% extends 'base.html' %}
 
+{% block title %}Detalle del Ciclo{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <div class="card">
-        <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
-            <h4 class="mb-0">Detalle del Ciclo</h4>
-            <a href="{% url 'ciclo_listar' %}" class="btn btn-light btn-sm">Volver</a>
+<div class="mb-3">
+    <a href="{% url 'ciclo_listar' %}" class="text-decoration-none text-muted fw-bold">
+        <i class="bi bi-arrow-left me-1"></i> Volver al listado
+    </a>
+</div>
+
+<div class="card profile-header-card mb-4 p-4">
+    <div class="d-flex flex-column flex-md-row align-items-center gap-4">
+
+        <div class="avatar-lg bg-success">
+            <i class="bi bi-calendar-range"></i>
         </div>
-        <div class="card-body">
-            <div class="row mb-3">
-                <div class="col-md-3 fw-bold">Nombre:</div>
-                <div class="col-md-9">{{ ciclo.nombreciclo }}</div>
-            </div>
-            <div class="row mb-3">
-                <div class="col-md-3 fw-bold">Fecha Inicio:</div>
-                <div class="col-md-9">{{ ciclo.fechainicio }}</div>
-            </div>
-            <div class="row mb-3">
-                <div class="col-md-3 fw-bold">Fecha Fin:</div>
-                <div class="col-md-9">{{ ciclo.fechafin }}</div>
-            </div>
-            <div class="row mb-3">
-                <div class="col-md-3 fw-bold">Estado:</div>
-                <div class="col-md-9">
-                    {% if ciclo.estado == 'Activo' %}
-                    <span class="badge bg-success">Activo</span>
-                    {% else %}
-                    <span class="badge bg-secondary">{{ ciclo.estado }}</span>
-                    {% endif %}
+
+        <div class="flex-grow-1 text-center text-md-start">
+            <h2 class="fw-bold mb-1">
+                {{ ciclo.nombre }}
+            </h2>
+            <p class="text-muted mb-2">
+                <i class="bi bi-clock-history me-1"></i> Periodo Académico
+            </p>
+
+            {% if ciclo.estado == 'ABIERTO' or ciclo.estado == 'INSCRIPCIONES' %}
+            <span
+                class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 border border-success border-opacity-25">
+                {{ ciclo.estado|title }}
+            </span>
+            {% else %}
+            <span
+                class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-3 border border-secondary border-opacity-25">
+                {{ ciclo.estado|title }}
+            </span>
+            {% endif %}
+        </div>
+
+        <div class="d-flex gap-2">
+            <a href="{% url 'ciclo_editar' pk=ciclo.pk %}" class="btn btn-warning shadow-sm">
+                <i class="bi bi-pencil-square me-2"></i>Editar
+            </a>
+            <a href="{% url 'ciclo_eliminar' pk=ciclo.pk %}" class="btn btn-outline-danger shadow-sm"
+                onclick="return confirm('¿Eliminar este ciclo?');">
+                <i class="bi bi-trash me-2"></i>Eliminar
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="card card-section p-4 mb-5">
+    <h5 class="fw-bold text-primary mb-3 pb-2 border-bottom">
+        <i class="bi bi-info-circle me-2"></i>Información del Periodo
+    </h5>
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="p-3 bg-light rounded border-start border-4 border-success h-100">
+                <div class="detail-label text-success mb-2"><i class="bi bi-calendar-check me-1"></i> Fecha de Inicio
+                </div>
+                <div class="detail-value mb-0 fw-bold fs-4">
+                    {{ ciclo.fecha_inicio|date:"d \d\e F \d\e Y" }}
                 </div>
             </div>
         </div>
-        <div class="card-footer text-end">
-            <a href="{% url 'ciclo_editar' pk=ciclo.cicloid %}" class="btn btn-warning">
-                <i class="fas fa-edit"></i> Editar
-            </a>
-            <a href="{% url 'ciclo_eliminar' pk=ciclo.cicloid %}" class="btn btn-danger"
-                onclick="return confirm('¿Está seguro de eliminar este ciclo?');">
-                <i class="fas fa-trash"></i> Eliminar
-            </a>
+
+        <div class="col-md-6">
+            <div class="p-3 bg-light rounded border-start border-4 border-danger h-100">
+                <div class="detail-label text-danger mb-2"><i class="bi bi-calendar-x me-1"></i> Fecha de Finalización
+                </div>
+                <div class="detail-value mb-0 fw-bold fs-4">
+                    {{ ciclo.fecha_fin|date:"d \d\e F \d\e Y" }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <div class="alert alert-custom bg-info bg-opacity-10 text-info border-0">
+            <i class="bi bi-lightbulb me-2"></i>
+            <strong>Nota:</strong> Los grupos creados se asociarán automáticamente a este ciclo si está activo.
         </div>
     </div>
 </div>
