@@ -386,6 +386,12 @@ class GrupoForm(forms.Form):
         label="Nombre del Grupo",
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
+    catequista_nombre = forms.CharField(
+        max_length=100,
+        label="Catequista Titular",
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre Completo'})
+    )
     estado = forms.ChoiceField(
         choices=ESTADO_GRUPO,
         widget=forms.Select(attrs={'class': 'form-select'})
@@ -396,6 +402,12 @@ class GrupoUpdateForm(forms.Form):
     nombregrupo = forms.CharField(
         max_length=50, 
         label="Nombre del Grupo", 
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    catequista_nombre = forms.CharField(
+        max_length=100,
+        label="Catequista Titular",
+        required=True,
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
     estado = forms.ChoiceField(
@@ -473,6 +485,21 @@ class CalificacionForm(forms.Form):
         min_value=0,
         max_value=10,
         widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.1'})
+    )
+
+class SesionForm(forms.Form):
+    sesion_id = forms.IntegerField(
+        label="Número de Sesión",
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'min': '1'})
+    )
+    tema = forms.CharField(
+        label="Tema de la Sesión",
+        max_length=100,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    fecha = forms.DateField(
+        label="Fecha Programada",
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
     )
 
 # ==========================================

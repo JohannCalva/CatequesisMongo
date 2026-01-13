@@ -19,21 +19,26 @@
             </div>
 
             <div class="card-body p-4">
-                <div class="alert alert-custom bg-info bg-opacity-10 text-info border-0 mb-4">
-                    <i class="bi bi-info-circle me-1"></i>
-                    <strong>Nota:</strong> El Nivel y Ciclo no son modificables para mantener la integridad académica.
-                </div>
-
                 <form method="post">
                     {% csrf_token %}
 
                     <div class="row g-3">
-                        <div class="col-md-12">
+                        <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Nombre del Grupo</label>
                                 {{ form.nombregrupo }}
                                 {% if form.nombregrupo.errors %}
                                 <div class="text-danger small mt-1">{{ form.nombregrupo.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Catequista Titular</label>
+                                {{ form.catequista_nombre }}
+                                {% if form.catequista_nombre.errors %}
+                                <div class="text-danger small mt-1">{{ form.catequista_nombre.errors.0 }}</div>
                                 {% endif %}
                             </div>
                         </div>

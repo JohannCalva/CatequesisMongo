@@ -14,6 +14,7 @@ from .views import (
     GrupoDetailView,
     GrupoUpdateView,
     grupo_eliminar,
+    GrupoAddSesionView,
 
 
     # Inscripciones
@@ -54,6 +55,7 @@ urlpatterns = [
     path("grupos/<str:pk>/editar/", GrupoUpdateView.as_view(), name="grupo_editar"),
     path("grupos/<str:pk>/eliminar/", grupo_eliminar, name="grupo_eliminar"),
     path("grupos/buscar/", grupo_buscar, name="grupo_buscar"),
+    path("grupos/<str:pk>/sesiones/nueva/", GrupoAddSesionView.as_view(), name="grupo_add_sesion"),
 
     # ==========================
     # INSCRIPCIONES

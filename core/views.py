@@ -14,7 +14,8 @@ from .forms import (
     CicloForm,
     CicloUpdateForm,
     AsistenciaForm,
-    CalificacionForm
+    CalificacionForm,
+    SesionForm
 )
 
 def home(request):
@@ -263,14 +264,17 @@ class GrupoCreateView(FormView):
     def form_valid(self, form):
         data = form.cleaned_data
         import uuid
-        new_id = str(uuid.uuid4())[:8] 
-
+        new_id = str(uuid.uuid4())[:8]
         Grupo.objects.create(
             id=new_id,
             nombre_grupo=data['nombregrupo'],
             ciclo=data['ciclo'],
             nivel=data['nivelcatequesis'], 
-            estado=data['estado']
+            estado=data['estado'],
+            catequistas=[{
+                "nombre": data['catequista_nombre'],
+                "tipo": "TITULAR"
+            }]
         )
         return redirect('grupo_listar')
 
@@ -285,9 +289,16 @@ class GrupoUpdateView(View):
 
     def get(self, request, pk):
         grupo = get_object_or_404(Grupo, pk=pk)
+        
+        # Obtenemos nombre del primer catequista (asumimos lógica simple por ahora)
+        cat_nombre = ""
+        if grupo.catequistas and len(grupo.catequistas) > 0:
+            cat_nombre = grupo.catequistas[0].get('nombre', '')
+
         form = self.form_class(initial={
             'nombregrupo': grupo.nombre_grupo,
-            'estado': grupo.estado
+            'estado': grupo.estado,
+            'catequista_nombre': cat_nombre
         })
         return render(request, self.template_name, {'form': form, 'grupo': grupo})
 
@@ -298,11 +309,48 @@ class GrupoUpdateView(View):
             data = form.cleaned_data
             
             Grupo.objects.filter(pk=pk).update(
-                nombre_grupo=data['nombregrupo'],
-                estado=data['estado']
+                nombre_grupo=data['nombregrupo'], 
+                estado=data['estado'],
+                catequistas=[{
+                    "nombre": data['catequista_nombre'],
+                    "tipo": "TITULAR"
+                }]
             )
             return redirect('grupo_detail', pk=pk)
-        return render(request, self.template_name, {'form': form, 'pk': pk})
+    
+class GrupoAddSesionView(View):
+    template_name = "grupos/crear_sesion.html"
+    form_class = SesionForm
+
+    def get(self, request, pk):
+        grupo = get_object_or_404(Grupo, pk=pk)
+        form = self.form_class()
+        return render(request, self.template_name, {'form': form, 'grupo': grupo, 'pk': pk})
+
+    def post(self, request, pk):
+        grupo = get_object_or_404(Grupo, pk=pk)
+        form = self.form_class(request.POST) 
+        if form.is_valid():
+            data = form.cleaned_data
+            nueva_sesion = {
+                "sesion_id": data['sesion_id'],
+                "tema": data['tema'],
+                "fecha": str(data['fecha']),
+                "asistencia_tomada": False
+            }
+            
+            if not grupo.sesiones:
+                grupo.sesiones = []
+            
+            grupo.sesiones.append(nueva_sesion)
+            
+            # Sort sessions by ID just in case
+            grupo.sesiones.sort(key=lambda x: x['sesion_id'])
+
+            Grupo.objects.filter(pk=pk).update(sesiones=grupo.sesiones)
+            
+            return redirect('grupo_detail', pk=pk)
+        return render(request, self.template_name, {'form': form, 'grupo': grupo, 'pk': pk})
 
 def grupo_eliminar(request, pk):
     grupo = get_object_or_404(Grupo, pk=pk)
