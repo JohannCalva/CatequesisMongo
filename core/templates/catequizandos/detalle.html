@@ -50,6 +50,10 @@
             <div class="detail-value">
                 {{ catequizando.fecha_nacimiento|date:"d \d\e F \d\e Y" }}
             </div>
+            <div class="detail-label mt-2"><i class="bi bi-geo-alt me-1"></i> Lugar de Nacimiento</div>
+            <div class="detail-value">
+                {{ catequizando.lugar_nacimiento|default:"No registrado" }}
+            </div>
         </div>
 
         <div class="col-md-4">
@@ -63,6 +67,12 @@
                 {{ catequizando.genero }}
                 {% endif %}
             </div>
+            <div class="col-md-12">
+                <div class="detail-label"><i class="bi bi-map me-1"></i> Dirección</div>
+                <div class="detail-value">
+                    {{ catequizando.direccion }}
+                </div>
+            </div>
         </div>
 
         <div class="col-md-4">
@@ -72,12 +82,7 @@
             </div>
         </div>
 
-        <div class="col-md-12">
-            <div class="detail-label"><i class="bi bi-map me-1"></i> Dirección</div>
-            <div class="detail-value">
-                {{ catequizando.direccion }}
-            </div>
-        </div>
+        
     </div>
 
     <h5 class="fw-bold text-danger mb-3 pb-2 border-bottom pt-2">
@@ -89,6 +94,11 @@
             <div class="detail-label"><i class="bi bi-droplet-fill me-1"></i> Tipo de Sangre</div>
             <div class="detail-value text-danger fw-bold">
                 {{ catequizando.informacion_salud.tipo_sangre|default:"--" }}
+            </div>
+
+            <div class="detail-label mt-3"><i class="bi bi-telephone-plus me-1"></i> Contacto de Emergencia</div>
+            <div class="detail-value">
+                {{ catequizando.informacion_salud.contacto_emergencia|default:"No registrado" }}
             </div>
         </div>
 
@@ -109,7 +119,7 @@
     </div>
 
     <h5 class="fw-bold text-warning mb-3 pb-2 border-bottom pt-2" style="color: #fd7e14 !important;">
-        <i class="bi bi-book me-2"></i>Datos Pastorales / Escolaridad
+        <i class="bi bi-book me-2"></i>Escolaridad
     </h5>
 
     <div class="row g-4 mb-4">
@@ -118,12 +128,64 @@
             <div class="detail-value fs-5">
                 {{ catequizando.escolaridad.anio_en_curso }}
             </div>
+
+            <div class="detail-label mt-3"><i class="bi bi-building me-1"></i> Institución Educativa</div>
+            <div class="detail-value">
+                {{ catequizando.escolaridad.escuela_colegio|default:"No registrada" }}
+            </div>
         </div>
 
         <div class="col-md-8">
             <div class="detail-label"><i class="bi bi-chat-square-text me-1"></i> Comentarios / Observaciones</div>
             <div class="p-3 bg-light rounded border-start border-4 border-warning text-muted">
                 {{ catequizando.observaciones_generales|default:"Sin comentarios adicionales." }}
+            </div>
+        </div>
+    </div>
+
+    <h5 class="fw-bold text-info mb-3 pb-2 border-bottom pt-2">
+        <i class="bi bi-droplet me-2"></i>Fe de Bautismo
+    </h5>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="row">
+                <div class="col-6 mb-3">
+                    <div class="detail-label">Parroquia</div>
+                    <div class="detail-value">{{ catequizando.fe_bautismo.parroquia|default:"--" }}</div>
+                </div>
+                <div class="col-6 mb-3">
+                    <div class="detail-label">Ciudad</div>
+                    <div class="detail-value">{{ catequizando.fe_bautismo.ciudad|default:"--" }}</div>
+                </div>
+                <div class="col-6 mb-3">
+                    <div class="detail-label">Fecha</div>
+                    <div class="detail-value">{{ catequizando.fe_bautismo.fecha|default:"--" }}</div>
+                </div>
+                <div class="col-6 mb-3">
+                    <div class="detail-label">Sacerdote</div>
+                    <div class="detail-value">{{ catequizando.fe_bautismo.sacerdote|default:"--" }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="row">
+                <div class="col-6 mb-3">
+                    <div class="detail-label">Tomo</div>
+                    <div class="detail-value">{{ catequizando.fe_bautismo.tomo|default:"--" }}</div>
+                </div>
+                <div class="col-6 mb-3">
+                    <div class="detail-label">Página</div>
+                    <div class="detail-value">{{ catequizando.fe_bautismo.pagina|default:"--" }}</div>
+                </div>
+                <div class="col-6 mb-3">
+                    <div class="detail-label">Padrino</div>
+                    <div class="detail-value">{{ catequizando.fe_bautismo.padrino|default:"--" }}</div>
+                </div>
+                <div class="col-6 mb-3">
+                    <div class="detail-label">Madrina</div>
+                    <div class="detail-value">{{ catequizando.fe_bautismo.madrina|default:"--" }}</div>
+                </div>
             </div>
         </div>
     </div>

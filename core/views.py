@@ -44,8 +44,9 @@ class CatequizandoUpdateView(View):
 
         form = self.form_class(initial={
             "telefono": cateq.telefono_casa,
-            "estado": "ACTIVO", 
+            "direccion": cateq.direccion, 
             "anioencurso": cateq.escolaridad.get('anio_en_curso', '') if cateq.escolaridad else '',
+            "escuelacolegio": cateq.escolaridad.get('escuela_colegio', '') if cateq.escolaridad else '',
             "tiposangre": cateq.informacion_salud.get('tipo_sangre', '') if cateq.informacion_salud else '',
             "alergia": ", ".join(cateq.informacion_salud.get('alergias', [])) if cateq.informacion_salud else '',
             "comentario": cateq.observaciones_generales,
@@ -63,6 +64,7 @@ class CatequizandoUpdateView(View):
             # Usamos los valores actuales si existen, si no, inicializamos
             escolaridad = cateq.escolaridad if cateq.escolaridad else {}
             escolaridad['anio_en_curso'] = data['anioencurso']
+            escolaridad['escuela_colegio'] = data['escuelacolegio']
             
             info_salud = cateq.informacion_salud if cateq.informacion_salud else {}
             info_salud['tipo_sangre'] = data['tiposangre']
@@ -72,7 +74,9 @@ class CatequizandoUpdateView(View):
             # que Django reescriba todo el documento poniendo null en campos faltantes.
             Catequizando.objects.filter(pk=pk).update(
                 telefono_casa=data["telefono"],
+                direccion=data["direccion"],
                 observaciones_generales=data["comentario"],
+
                 escolaridad=escolaridad,
                 informacion_salud=info_salud
             )

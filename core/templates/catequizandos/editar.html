@@ -44,6 +44,13 @@
                                 <div class="text-danger small mt-1">{{ form.telefono.errors.0 }}</div>
                                 {% endif %}
                             </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Dirección</label>
+                                {{ form.direccion }}
+                                {% if form.direccion.errors %}
+                                <div class="text-danger small mt-1">{{ form.direccion.errors.0 }}</div>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
 
@@ -53,12 +60,10 @@
                         </div>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label">Estado</label>
-                                {{ form.estado }}
-                                <div class="form-text text-muted small">Define si el alumno está activo actualmente.
-                                </div>
-                                {% if form.estado.errors %}
-                                <div class="text-danger small mt-1">{{ form.estado.errors.0 }}</div>
+                                <label class="form-label">Institución Educativa</label>
+                                {{ form.escuelacolegio }}
+                                {% if form.escuelacolegio.errors %}
+                                <div class="text-danger small mt-1">{{ form.escuelacolegio.errors.0 }}</div>
                                 {% endif %}
                             </div>
 

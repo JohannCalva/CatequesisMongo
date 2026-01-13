@@ -81,11 +81,20 @@ class CatequizandoUpdateMiniForm(forms.Form):
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': '09...'})
     )
     
-    estado = forms.ChoiceField(
-        choices=ESTADO_GRUPO, # Using Estado Grupo as 'General' state proxy? Or maybe just text.
-        widget=forms.Select(attrs={'class': 'form-select'})
+    direccion = forms.CharField(
+        max_length=200, 
+        required=False,
+        label="Dirección", 
+        widget=forms.TextInput(attrs={'class': 'form-control'})
     )
     
+    escuelacolegio = forms.CharField(
+        max_length=150, 
+        required=False, 
+        label="Institución Educativa",
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+
     anioencurso = forms.ChoiceField(
         choices=OPCIONES_ANIO,
         required=False,
