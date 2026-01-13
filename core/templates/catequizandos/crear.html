@@ -31,25 +31,6 @@
                     <h6 class="text-uppercase text-muted fw-bold mb-3 small ls-1">Identidad & Nacimiento</h6>
                     <div class="row g-3 mb-4">
                         <div class="col-md-3">
-                            <label class="form-label">Cédula</label>
-                            {{ form.cedula }}
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Fecha de Nacimiento</label>
-                            {{ form.fechanacimiento }}
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Género</label>
-                            {{ form.genero }}
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Estado Inscripción</label>
-                            {{ form.estado }}
-                        </div>
-                    </div>
-
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-3">
                             <label class="form-label">Primer Nombre</label>
                             {{ form.primernombre }}
                         </div>
@@ -66,46 +47,51 @@
                             {{ form.segundoapellido }}
                         </div>
                     </div>
+                    
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <label class="form-label">Cédula</label>
+                            {{ form.cedula }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Fecha de Nacimiento</label>
+                            {{ form.fechanacimiento }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Lugar de Nacimiento</label>
+                            {{ form.lugar_nacimiento }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Género</label>
+                            {{ form.genero }}
+                        </div>
+                    </div>
+
+                    
 
                     <hr class="text-muted opacity-25">
 
                     <h6 class="text-uppercase text-muted fw-bold mb-3 small ls-1 mt-4">Ubicación y Contacto</h6>
                     <div class="row g-3 mb-4">
-                        <div class="col-md-4">
-                            <label class="form-label">Calle Principal</label>
-                            {{ form.calleprincipal }}
+                        <div class="col-md-6">
+                            <label class="form-label">Dirección Domiciliaria</label>
+                            {{ form.direccion }}
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Calle Secundaria</label>
-                            {{ form.callesecundaria }}
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Sector / Barrio</label>
-                            {{ form.sector }}
-                        </div>
-                    </div>
-                    <div class="row g-3 mb-4">
                         <div class="col-md-6">
                             <label class="form-label"><i class="bi bi-telephone me-1"></i> Teléfono</label>
                             {{ form.telefono }}
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label"><i class="bi bi-envelope me-1"></i> Correo</label>
-                            {{ form.correo }}
+                            <div class="text-danger small">{{ form.telefono.errors }}</div>
                         </div>
                     </div>
 
-                    <hr class="text-muted opacity-25">
-
-                    <h6 class="text-uppercase text-muted fw-bold mb-3 small ls-1 mt-4">Pastoral y Salud</h6>
                     <div class="row g-3 mb-3">
-                        <div class="col-md-4">
+                        <div class="col-md-5">
+                            <label class="form-label">Institución Educativa</label>
+                            {{ form.escuelacolegio }}
+                        </div>
+                        <div class="col-md-3">
                             <label class="form-label">Año en Curso</label>
                             {{ form.anioencurso }}
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Parroquia ID</label>
-                            {{ form.parroquiaid }}
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">N° Hijo</label>
@@ -116,28 +102,28 @@
                             {{ form.numerohermanos }}
                         </div>
                     </div>
+                    
+                    <hr class="text-muted opacity-25">
+
+                    <h6 class="text-uppercase text-muted fw-bold mb-3 small ls-1 mt-4">Salud</h6>
+                    
 
                     <div class="row g-3 mb-3">
                         <div class="col-md-3">
                             <label class="form-label text-danger">Tipo de Sangre</label>
                             {{ form.tiposangre }}
                         </div>
-                        <div class="col-md-9">
+                        <div class="col-md-5">
+                            <label class="form-label text-danger">Contacto de Emergencia</label>
+                            {{ form.contacto_emergencia }}
+                        </div>
+                        <div class="col-md-4">
                             <label class="form-label text-danger">Alergias / Condiciones</label>
                             {{ form.alergia }}
                         </div>
                     </div>
 
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Ciudad de Nacimiento</label>
-                            {{ form.ciudadnacimiento }}
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">País</label>
-                            {{ form.paisnacimiento }}
-                        </div>
-                    </div>
+                    
 
                     <div class="mt-3">
                         <label class="form-label">Comentarios Adicionales</label>
@@ -153,23 +139,41 @@
                 </div>
                 <div class="card-body p-4">
                     <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Parroquia de Bautismo</label>
+                        <div class="col-md-4">
+                            <label class="form-label">Ciudad de Bautismo</label>
+                            {{ form.ciudadbautismo }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Parroquia</label>
                             {{ form.parroquiabautismoid }}
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Fecha de Bautismo</label>
+                        <div class="col-md-4">
+                            <label class="form-label">Fecha</label>
                             {{ form.fechabautismo }}
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Tomo</label>
+                            {{ form.numerotomo }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Página</label>
+                            {{ form.paginatomo }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Sacerdote</label>
+                            {{ form.sacerdotebautismo }}
                         </div>
                     </div>
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">Número de Tomo</label>
-                            {{ form.numerotomo }}
+                            <label class="form-label">Padrino</label>
+                            {{ form.padrinobautismo }}
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Página Tomo</label>
-                            {{ form.paginatomo }}
+                            <label class="form-label">Madrina</label>
+                            {{ form.madrinabautismo }}
                         </div>
                     </div>
                 </div>
@@ -187,33 +191,25 @@
                             <h5 class="fw-bold text-dark mb-3"><i class="bi bi-gender-male text-primary me-2"></i>Datos
                                 del Padre</h5>
 
-                            <div class="row g-2 mb-2">
-                                <div class="col-6"><label class="small text-muted">Cédula</label>
-                                    {{ form.cedulapadre }}
+                            <div class="row mb-2">
+                                <div class="col-md-6">
+                                    <label class="small text-muted">Nombres</label>
+                                    {{ form.nombrespadre }}
                                 </div>
-                                <div class="col-6"><label class="small text-muted">F. Nacimiento</label>
-                                    {{ form.fnacimientopadre }}</div>
+                                <div class="col-md-6">
+                                    <label class="small text-muted">Apellidos</label>
+                                    {{ form.apellidospadre }}
+                                </div>
                             </div>
-
-                            <div class="row g-2 mb-2">
-                                <div class="col-6"><label class="small text-muted">1er Nombre</label>
-                                    {{ form.pnombrepadre }}</div>
-                                <div class="col-6"><label class="small text-muted">2do Nombre</label>
-                                    {{ form.snombrepadre }}</div>
-                            </div>
-                            <div class="row g-2 mb-2">
-                                <div class="col-6"><label class="small text-muted">1er Apellido</label>
-                                    {{ form.papellidopadre }}</div>
-                                <div class="col-6"><label class="small text-muted">2do Apellido</label>
-                                    {{ form.sapellidopadre }}</div>
-                            </div>
-                            <div class="mb-2">
-                                <label class="small text-muted">Teléfono</label>
-                                {{ form.telefonopadre }}
-                            </div>
-                            <div class="mb-2">
-                                <label class="small text-muted">Ocupación</label>
-                                {{ form.ocupacionpadre }}
+                            <div class="row mb-2">
+                                <div class="col-md-6">
+                                    <label class="small text-muted">Teléfono</label>
+                                    {{ form.telefonopadre }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="small text-muted">Ocupación</label>
+                                    {{ form.ocupacionpadre }}
+                                </div>
                             </div>
                         </div>
 
@@ -222,31 +218,28 @@
                                 de la Madre</h5>
 
                             <div class="row g-2 mb-2">
-                                <div class="col-6"><label class="small text-muted">Cédula</label>{{ form.cedulamadre }}
+                                <!-- Removed Cedula and F. Nacimiento -->
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-md-6">
+                                    <label class="small text-muted">Nombres</label>
+                                    {{ form.nombresmadre }}
                                 </div>
-                                <div class="col-6"><label class="small text-muted">F. Nacimiento</label>
-                                    {{ form.fnacimientomadre }}</div>
+                                <div class="col-md-6">
+                                    <label class="small text-muted">Apellidos</label>
+                                    {{ form.apellidosmadre }}
+                                </div>
                             </div>
 
-                            <div class="row g-2 mb-2">
-                                <div class="col-6"><label class="small text-muted">1er Nombre</label>
-                                    {{ form.pnombremadre }}</div>
-                                <div class="col-6"><label class="small text-muted">2do Nombre</label>
-                                    {{ form.snombremadre }}</div>
-                            </div>
-                            <div class="row g-2 mb-2">
-                                <div class="col-6"><label class="small text-muted">1er Apellido</label>
-                                    {{ form.papellidomadre }}</div>
-                                <div class="col-6"><label class="small text-muted">2do Apellido</label>
-                                    {{ form.sapellidomadre }}</div>
-                            </div>
-                            <div class="mb-2">
-                                <label class="small text-muted">Teléfono</label>
-                                {{ form.telefonomadre }}
-                            </div>
-                            <div class="mb-2">
-                                <label class="small text-muted">Ocupación</label>
-                                {{ form.ocupacionmadre }}
+                            <div class="row mb-2">
+                                <div class="col-md-6">
+                                    <label class="small text-muted">Teléfono</label>
+                                    {{ form.telefonomadre }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="small text-muted">Ocupación</label>
+                                    {{ form.ocupacionmadre }}
+                                </div>
                             </div>
                         </div>
 

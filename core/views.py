@@ -59,17 +59,24 @@ class CatequizandoUpdateView(View):
             cateq = get_object_or_404(Catequizando, pk=pk)
             data = form.cleaned_data
 
-            cateq.telefono_casa = data["telefono"]
-            cateq.observaciones_generales = data["comentario"]
+            # Preparamos los datos para update
+            # Usamos los valores actuales si existen, si no, inicializamos
+            escolaridad = cateq.escolaridad if cateq.escolaridad else {}
+            escolaridad['anio_en_curso'] = data['anioencurso']
             
-            if not cateq.escolaridad: cateq.escolaridad = {}
-            cateq.escolaridad['anio_en_curso'] = data['anioencurso']
-            
-            if not cateq.informacion_salud: cateq.informacion_salud = {}
-            cateq.informacion_salud['tipo_sangre'] = data['tiposangre']
-            cateq.informacion_salud['alergias'] = [data['alergia']] if data['alergia'] else []
+            info_salud = cateq.informacion_salud if cateq.informacion_salud else {}
+            info_salud['tipo_sangre'] = data['tiposangre']
+            info_salud['alergias'] = [data['alergia']] if data['alergia'] else []
 
-            cateq.save()
+            # Usamos update para modificar solo los campos específicos y evitar
+            # que Django reescriba todo el documento poniendo null en campos faltantes.
+            Catequizando.objects.filter(pk=pk).update(
+                telefono_casa=data["telefono"],
+                observaciones_generales=data["comentario"],
+                escolaridad=escolaridad,
+                informacion_salud=info_salud
+            )
+
             return redirect("catequizando_detalle", pk=pk)
 
         return render(request, self.template_name, {"form": form, "pk": pk})
@@ -83,21 +90,21 @@ class CatequizandoCreateView(FormView):
         data = form.cleaned_data
 
         padres = []
-        if data.get('cedulapadre') or data.get('pnombrepadre'):
+        if data.get('nombrespadre'):
             padre = {
                 "relacion": "PADRE",
-                "nombres": f"{data.get('pnombrepadre', '')} {data.get('snombrepadre', '')}".strip(),
-                "apellidos": f"{data.get('papellidopadre', '')} {data.get('sapellidopadre', '')}".strip(),
+                "nombres": data.get('nombrespadre', '').strip(),
+                "apellidos": data.get('apellidospadre', '').strip(),
                 "telefono": data.get('telefonopadre', ''),
                 "ocupacion": data.get('ocupacionpadre', '')
             }
             padres.append(padre)
         
-        if data.get('cedulamadre') or data.get('pnombremadre'):
+        if data.get('nombresmadre'):
             madre = {
                 "relacion": "MADRE",
-                "nombres": f"{data.get('pnombremadre', '')} {data.get('snombremadre', '')}".strip(),
-                "apellidos": f"{data.get('papellidomadre', '')} {data.get('sapellidomadre', '')}".strip(),
+                "nombres": data.get('nombresmadre', '').strip(),
+                "apellidos": data.get('apellidosmadre', '').strip(),
                 "telefono": data.get('telefonomadre', ''),
                 "ocupacion": data.get('ocupacionmadre', '')
             }
@@ -125,23 +132,23 @@ class CatequizandoCreateView(FormView):
         fe_bautismo = {
             "fecha": str(data.get('fechabautismo')) if data.get('fechabautismo') else None,
             "parroquia": data.get('parroquiabautismoid', ''),
-            "ciudad": "", 
+            "ciudad": data.get('ciudadbautismo', ''), 
             "tomo": data.get('numerotomo'),
             "pagina": data.get('paginatomo'),
-            "sacerdote": "",
-            "padrino": "",
-            "madrina": ""
+            "sacerdote": data.get('sacerdotebautismo', ''),
+            "padrino": data.get('padrinobautismo', ''),
+            "madrina": data.get('madrinabautismo', '')
         }
 
         info_salud = {
             "tipo_sangre": data.get('tiposangre'),
-            "contacto_emergencia": "", 
+            "contacto_emergencia": data.get('contacto_emergencia', ''),
             "alergias": [data.get('alergia')] if data.get('alergia') else [],
             "aspectos_a_considerar": ""
         }
 
         escolaridad = {
-            "escuela_colegio": "",
+            "escuela_colegio": data.get('escuelacolegio', ''),
             "anio_en_curso": data.get('anioencurso')
         }
 
@@ -154,11 +161,11 @@ class CatequizandoCreateView(FormView):
             segundo_apellido=data['segundoapellido'],
             genero=data['genero'],
             fecha_nacimiento=data['fechanacimiento'],
-            lugar_nacimiento=f"{data['ciudadnacimiento']}, {data['paisnacimiento']}",
+            lugar_nacimiento=data['lugar_nacimiento'],
             numero_hijo=data['numerohijo'],
             numero_hermanos=data['numerohermanos'],
             telefono_casa=data['telefono'],
-            direccion=f"{data['calleprincipal']} y {data['callesecundaria']}, {data['sector']}",
+            direccion=data['direccion'],
             
             padres=padres,
             representante_legal=rep_legal,
@@ -285,9 +292,11 @@ class GrupoUpdateView(View):
         if form.is_valid():
             grupo = get_object_or_404(Grupo, pk=pk)
             data = form.cleaned_data
-            grupo.nombre_grupo = data['nombregrupo']
-            grupo.estado = data['estado']
-            grupo.save()
+            
+            Grupo.objects.filter(pk=pk).update(
+                nombre_grupo=data['nombregrupo'],
+                estado=data['estado']
+            )
             return redirect('grupo_detail', pk=pk)
         return render(request, self.template_name, {'form': form, 'pk': pk})
 
@@ -382,9 +391,11 @@ class InscripcionUpdateView(View):
         form = self.form_class(request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            inscripcion.estado_inscripcion = data['estadoinscripcion']
-            inscripcion.estado_pago = data['estadopago']
-            inscripcion.save()
+            
+            Inscripcion.objects.filter(pk=inscripcion.pk).update(
+                estado_inscripcion=data['estadoinscripcion'],
+                estado_pago=data['estadopago']
+            )
             return redirect('inscripcion_detail', catequizando_id=catequizando_id, grupo_id=grupo_id)
         return render(request, self.template_name, {'form': form, 'catequizando_id': catequizando_id, 'grupo_id': grupo_id})
 
@@ -421,7 +432,10 @@ class InscripcionTomarAsistenciaView(View):
                 inscripcion.registro_asistencia = []
             
             inscripcion.registro_asistencia.append(nuevo_registro)
-            inscripcion.save()
+            
+            Inscripcion.objects.filter(pk=inscripcion.pk).update(
+                registro_asistencia=inscripcion.registro_asistencia
+            )
             return redirect('inscripcion_detail', catequizando_id=catequizando_id, grupo_id=grupo_id)
         return render(request, self.template_name, {'form': form, 'inscripcion': inscripcion})
 
@@ -453,7 +467,10 @@ class InscripcionAgregarNotaView(View):
                 inscripcion.calificaciones = []
             
             inscripcion.calificaciones.append(nueva_nota)
-            inscripcion.save()
+            
+            Inscripcion.objects.filter(pk=inscripcion.pk).update(
+                calificaciones=inscripcion.calificaciones
+            )
             return redirect('inscripcion_detail', catequizando_id=catequizando_id, grupo_id=grupo_id)
         return render(request, self.template_name, {'form': form, 'inscripcion': inscripcion})
 
@@ -508,11 +525,13 @@ class CicloUpdateView(View):
         if form.is_valid():
             ciclo = get_object_or_404(Ciclo, pk=pk)
             data = form.cleaned_data
-            ciclo.nombre = data['nombreciclo']
-            ciclo.fecha_inicio = data['fechainicio']
-            ciclo.fecha_fin = data['fechafin']
-            ciclo.estado = data['estado']
-            ciclo.save()
+            
+            Ciclo.objects.filter(pk=pk).update(
+                nombre=data['nombreciclo'],
+                fecha_inicio=data['fechainicio'],
+                fecha_fin=data['fechafin'],
+                estado=data['estado']
+            )
             return redirect('ciclo_listar')
         return render(request, self.template_name, {'form': form, 'pk': pk})
 

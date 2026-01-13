@@ -74,9 +74,11 @@ class CatequizandoUpdateMiniForm(forms.Form):
         required=False,
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': '09...'})
     )
-    correo = forms.EmailField(
+    telefono = forms.CharField(
+        min_length=10,
+        max_length=10, 
         required=False,
-        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'ejemplo@correo.com'})
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': '09...'})
     )
     
     estado = forms.ChoiceField(
@@ -120,22 +122,27 @@ class CatequizandoSPForm(forms.Form):
     # -----------------------
     # A) Datos de la Persona
     # -----------------------
-    cedula = forms.CharField(max_length=10, label="Cédula", widget=forms.TextInput(attrs={'class': 'form-control', 
+    cedula = forms.CharField(
+        max_length=10, 
+        label="Cédula", 
+        widget=forms.TextInput(attrs={
+            'class': 'form-control', 
             'minlength': '10', 
             'maxlength': '10',
             'title': 'La cédula debe tener 10 dígitos numéricos',
-            'inputmode': 'numeric'}))
+            'inputmode': 'numeric'
+        })
+    )
     primernombre = forms.CharField(max_length=50, label="Primer Nombre", widget=forms.TextInput(attrs={'class': 'form-control'}))
     segundonombre = forms.CharField(max_length=50, required=False, label="Segundo Nombre", widget=forms.TextInput(attrs={'class': 'form-control'}))
     primerapellido = forms.CharField(max_length=50, label="Primer Apellido", widget=forms.TextInput(attrs={'class': 'form-control'}))
     segundoapellido = forms.CharField(max_length=50, label="Segundo Apellido", widget=forms.TextInput(attrs={'class': 'form-control'}))
     
     fechanacimiento = forms.DateField(
-    label="Fecha de Nacimiento",
-    required=True,
-    widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
-)
-
+        label="Fecha de Nacimiento",
+        required=True,
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
+    )
     
     genero = forms.ChoiceField(
         choices=OPCIONES_GENERO, 
@@ -143,41 +150,51 @@ class CatequizandoSPForm(forms.Form):
         widget=forms.Select(attrs={'class': 'form-select'})
     )
     
-    telefono = forms.CharField(max_length=10, required=False, label="Teléfono", widget=forms.TextInput(attrs={'class': 'form-control',
+    telefono = forms.CharField(
+        max_length=10, 
+        required=False, 
+        label="Teléfono", 
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
             'minlength': '10',
             'maxlength': '10',
-            'inputmode': 'numeric'}))
-    correo = forms.EmailField(max_length=50, required=False, label="Correo", widget=forms.EmailInput(attrs={'class': 'form-control'}))
+            'inputmode': 'numeric'
+        })
+    )
 
     # -----------------------
     # B) Dirección
     # -----------------------
-    calleprincipal = forms.CharField(max_length=50, label="Calle Principal", widget=forms.TextInput(attrs={'class': 'form-control'}))
-    callesecundaria = forms.CharField(max_length=50, label="Calle Secundaria", widget=forms.TextInput(attrs={'class': 'form-control'}))
-    sector = forms.CharField(max_length=50, label="Sector", widget=forms.TextInput(attrs={'class': 'form-control'}))
+    direccion = forms.CharField(
+        max_length=200, 
+        label="Dirección", 
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Calle Principal y Secundaria, Sector'
+        })
+    )
 
     # -----------------------
-    # C) Catequizando (AQUÍ ESTÁN LOS CAMBIOS PRINCIPALES)
+    # C) Catequizando
     # -----------------------
-    # Parroquia ahora es CharField porque no hay coleccion Parroquia
-    parroquiaid = forms.CharField(
-        label="Parroquia",
-        required=False,
-        widget=forms.TextInput(attrs={'class': 'form-control'})
+    lugar_nacimiento = forms.CharField(
+        max_length=150, 
+        label="Lugar de Nacimiento", 
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ciudad, País'
+        })
     )
-    paisnacimiento = forms.CharField(max_length=25, label="País de Nacimiento", widget=forms.TextInput(attrs={'class': 'form-control'}))
-    ciudadnacimiento = forms.CharField(max_length=50, label="Ciudad de Nacimiento", widget=forms.TextInput(attrs={'class': 'form-control'}))
     numerohijo = forms.IntegerField(label="Número de Hijo", widget=forms.NumberInput(attrs={'class': 'form-control'}))
     numerohermanos = forms.IntegerField(label="Número de Hermanos", widget=forms.NumberInput(attrs={'class': 'form-control'}))
     
-    # CAMBIO: Estado ahora es Select
-    estado = forms.ChoiceField(
-        choices=ESTADO_GRUPO, # Assuming 'Estado' refers to Active/Inactive status
-        label="Estado",
-        widget=forms.Select(attrs={'class': 'form-select'})
+    escuelacolegio = forms.CharField(
+        max_length=150, 
+        required=False, 
+        label="Institución Educativa",
+        widget=forms.TextInput(attrs={'class': 'form-control'})
     )
-    
-    # CAMBIO: Año ahora es Select
+
     anioencurso = forms.ChoiceField(
         choices=OPCIONES_ANIO, 
         required=False, 
@@ -185,11 +202,17 @@ class CatequizandoSPForm(forms.Form):
         widget=forms.Select(attrs={'class': 'form-select'})
     )
     
-    # CAMBIO: Tipo Sangre ahora es Select
     tiposangre = forms.ChoiceField(
         choices=OPCIONES_SANGRE,
         label="Tipo de Sangre",
         widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    
+    contacto_emergencia = forms.CharField(
+        max_length=100, 
+        required=False, 
+        label="Contacto de Emergencia",
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre y Teléfono'})
     )
     
     alergia = forms.CharField(max_length=50, required=False, label="Alergia", widget=forms.TextInput(attrs={'class': 'form-control'}))
@@ -200,54 +223,82 @@ class CatequizandoSPForm(forms.Form):
         widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2})
     )
 
-    
-    cedulapadre = forms.CharField(max_length=10, required=False, label="Cédula del Padre", widget=forms.TextInput(attrs={'class': 'form-control',
-            'minlength': '10',
-            'maxlength': '10',
-            'inputmode': 'numeric'}))
-    pnombrepadre = forms.CharField(max_length=50, label="Primer Nombre Padre", required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    snombrepadre = forms.CharField(max_length=50, required=False, label="Segundo Nombre Padre", widget=forms.TextInput(attrs={'class': 'form-control'}))
-    papellidopadre = forms.CharField(max_length=50, required=False, label="Primer Apellido Padre", widget=forms.TextInput(attrs={'class': 'form-control'}))
-    sapellidopadre = forms.CharField(max_length=50, required=False, label="Segundo Apellido Padre", widget=forms.TextInput(attrs={'class': 'form-control'}))
-    
-    fnacimientopadre = forms.DateField(
-        label="Fecha Nacimiento Padre", 
-        required=False,
-        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
+    # -----------------------
+    # D) Datos Familiares (Simplificados)
+    # -----------------------
+    nombrespadre = forms.CharField(
+        max_length=100, 
+        label="Nombres Padre", 
+        required=False, 
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    apellidospadre = forms.CharField(
+        max_length=100, 
+        required=False, 
+        label="Apellidos Padre", 
+        widget=forms.TextInput(attrs={'class': 'form-control'})
     )
     
-    telefonopadre = forms.CharField(max_length=10, required=False, label="Teléfono Padre", widget=forms.TextInput(attrs={'class': 'form-control',
+    telefonopadre = forms.CharField(
+        max_length=10, 
+        required=False, 
+        label="Teléfono Padre", 
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
             'minlength': '10',
             'maxlength': '10',
-            'inputmode': 'numeric'}))
+            'inputmode': 'numeric'
+        })
+    )
     correopadre = forms.EmailField(max_length=50, required=False, label="Correo Padre", widget=forms.EmailInput(attrs={'class': 'form-control'}))
     ocupacionpadre = forms.CharField(max_length=100, required=False, label="Ocupación Padre", widget=forms.TextInput(attrs={'class': 'form-control'}))
 
-    cedulamadre = forms.CharField(max_length=10, required=False, label="Cédula de la Madre", widget=forms.TextInput(attrs={'class': 'form-control',
+    cedulamadre = forms.CharField(
+        max_length=10, 
+        required=False, 
+        label="Cédula de la Madre", 
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
             'minlength': '10',
             'maxlength': '10',
-            'inputmode': 'numeric'}))
-    pnombremadre = forms.CharField(max_length=50, required=False, label="Primer Nombre Madre", widget=forms.TextInput(attrs={'class': 'form-control'}))
-    snombremadre = forms.CharField(max_length=50, required=False, label="Segundo Nombre Madre", widget=forms.TextInput(attrs={'class': 'form-control'}))
-    papellidomadre = forms.CharField(max_length=50, required=False, label="Primer Apellido Madre", widget=forms.TextInput(attrs={'class': 'form-control'}))
-    sapellidomadre = forms.CharField(max_length=50, required=False, label="Segundo Apellido Madre", widget=forms.TextInput(attrs={'class': 'form-control'}))
-    
-    fnacimientomadre = forms.DateField(
-        label="Fecha Nacimiento Madre",
-        required=False,
-        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
+            'inputmode': 'numeric'
+        })
+    )
+    nombresmadre = forms.CharField(
+        max_length=100, 
+        required=False, 
+        label="Nombres Madre", 
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    apellidosmadre = forms.CharField(
+        max_length=100, 
+        required=False, 
+        label="Apellidos Madre", 
+        widget=forms.TextInput(attrs={'class': 'form-control'})
     )
     
-    telefonomadre = forms.CharField(max_length=10, required=False, label="Teléfono Madre", widget=forms.TextInput(attrs={'class': 'form-control',
+    telefonomadre = forms.CharField(
+        max_length=10, 
+        required=False, 
+        label="Teléfono Madre", 
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
             'minlength': '10',
             'maxlength': '10',
-            'inputmode': 'numeric'}))
+            'inputmode': 'numeric'
+        })
+    )
     correomadre = forms.EmailField(max_length=50, required=False, label="Correo Madre", widget=forms.EmailInput(attrs={'class': 'form-control'}))
     ocupacionmadre = forms.CharField(max_length=100, required=False, label="Ocupación Madre", widget=forms.TextInput(attrs={'class': 'form-control'}))
 
     # -----------------------
     # E) Fe de Bautismo
     # -----------------------
+    ciudadbautismo = forms.CharField(
+        label="Ciudad de Bautismo",
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
     parroquiabautismoid = forms.CharField(
         label="Parroquia de Bautismo",
         required=False,
@@ -268,6 +319,43 @@ class CatequizandoSPForm(forms.Form):
         required=False,
         widget=forms.NumberInput(attrs={'class': 'form-control'})
     )
+    sacerdotebautismo = forms.CharField(
+        label="Sacerdote",
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    padrinobautismo = forms.CharField(
+        label="Padrino",
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    madrinabautismo = forms.CharField(
+        label="Madrina",
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+
+    # -----------------------
+    # Validaciones personalizadas
+    # -----------------------
+    def _validate_digits(self, value, field_name):
+        if value:
+            # Eliminar espacios por si acaso
+            value = value.strip()
+            if not value.isdigit():
+                raise forms.ValidationError(f"{field_name} debe contener solo números.")
+            if len(value) != 10:
+                raise forms.ValidationError(f"{field_name} debe tener 10 dígitos. Valor actual: {len(value)}")
+        return value
+
+    def clean_cedula(self):
+        return self._validate_digits(self.cleaned_data.get('cedula'), "La cédula")
+
+    def clean_telefono(self):
+        return self._validate_digits(self.cleaned_data.get('telefono'), "El teléfono")
+
+    def clean_telefonomadre(self):
+        return self._validate_digits(self.cleaned_data.get('telefonomadre'), "El teléfono de la madre")
 
 # ==========================================
 # 4. Formularios para GRUPOS
